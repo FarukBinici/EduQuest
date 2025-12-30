@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pandas Kod Yağmuru</title>
+    <style>
+        :root {
+            --neon-green: #0f0;
+            --neon-red: #f00;
+            --bg: #000;
+            --panel: #111;
+            --text: #fff;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden; /* Oyun için kaydırmayı kapat */
+            background-color: var(--bg);
+            font-family: 'Courier New', Courier, monospace;
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* Üst Bilgi Paneli */
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 30px;
+            background: var(--panel);
+            border-bottom: 2px solid #333;
+            font-size: 1.2rem;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        .score { color: var(--neon-green); }
+        .lives { color: var(--neon-red); letter-spacing: 5px; }
+        
+        /* Çıkış Butonu */
+        .close-btn {
+            text-decoration: none;
+            color: #666;
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+        .close-btn:hover { color: #fff; }
+
+        /* Oyun Alanı */
+        .game-area {
+            flex-grow: 1;
+            position: relative;
+            background: radial-gradient(circle, #1a1a1a 0%, #000000 100%);
+            overflow: hidden;
+        }
+
+        /* Düşen Blok */
+        .falling-block {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 255, 0, 0.1);
+            border: 2px solid var(--neon-green);
+            color: var(--neon-green);
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            box-shadow: 0 0 15px var(--neon-green);
+            white-space: nowrap;
+            text-shadow: 0 0 5px var(--neon-green);
+            z-index: 2;
+        }
+
+        /* Lazer çizgisi (Yere çarpma noktası) */
+        .danger-line {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--neon-red);
+            box-shadow: 0 0 20px var(--neon-red);
+            z-index: 5;
+        }
+
+        /* Alt Cevap Butonları */
+        .controls {
+            height: 220px;
+            background: var(--panel);
+            border-top: 2px solid #333;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 10px;
+            z-index: 10;
+        }
+
+        .btn-option {
+            background: #222;
+            border: 1px solid #444;
+            color: #ddd;
+            font-family: inherit;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.1s;
+            border-radius: 6px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .btn-option:hover { background: #333; border-color: #666; }
+        .btn-option:active { transform: scale(0.98); background: #444; }
+
+        /* Başlangıç ve Bitiş Ekranları */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            text-align: center;
+        }
+
+        .overlay h1 { font-size: 3rem; margin-bottom: 10px; text-transform: uppercase; color: var(--neon-green); text-shadow: 0 0 20px var(--neon-green); }
+        .overlay p { font-size: 1.2rem; margin-bottom: 30px; color: #ccc; max-width: 600px; line-height: 1.5; }
+        
+        .btn-start {
+            padding: 15px 50px;
+            font-size: 1.5rem;
+            background: var(--neon-green);
+            color: black;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: inherit;
+            box-shadow: 0 0 20px var(--neon-green);
+            border-radius: 4px;
+        }
+        .btn-start:hover { background: #fff; }
+
+        .hidden { display: none !important; }
+
+        /* Mobil Uyum */
+        @media (max-width: 600px) {
+            .controls { grid-template-columns: 1fr; height: 260px; }
+            .falling-block { font-size: 1.2rem; padding: 10px; }
+            .overlay h1 { font-size: 2rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="hud">
+        <a href="index.html" class="close-btn">✕</a>
+        <div class="score">SKOR: <span id="score">0</span></div>
+        <div class="lives">❤❤❤</div>
+    </div>
+
+    <div class="game-area" id="game-area">
+        <div class="danger-line"></div>
+        </div>
+
+    <div class="controls" id="options-container">
+        </div>
+
+    <div class="overlay" id="start-screen">
+        <h1>KOD YAĞMURU</h1>
+        <p>Pandas komutları yukarıdan düşüyor!<br>Yere çarpmadan doğru açıklamayı seçmelisin.<br>Her 50 puanda oyun hızlanır.</p>
+        <button class="btn-start" onclick="startGame()">BAŞLA</button>
+    </div>
+
+    <div class="overlay hidden" id="game-over-screen">
+        <h1 style="color: var(--neon-red); text-shadow: 0 0 20px var(--neon-red);">SİSTEM ÇÖKTÜ</h1>
+        <p>Son Skorun: <span id="final-score" style="color: white; font-weight: bold;">0</span></p>
+        <button class="btn-start" onclick="resetGame()">TEKRAR DENE</button>
+        <br><br>
+        <a href="index.html" style="color: #666; text-decoration: none; font-weight: bold;">ANA MENÜYE DÖN</a>
+    </div>
+
+<script>
+    // --- VERİ HAVUZU ---
+    const quizData = [
+        { q: "df.head()", a: "İlk 5 satır" },
+        { q: "df.tail()", a: "Son 5 satır" },
+        { q: "df.info()", a: "Genel bilgi & Bellek" },
+        { q: "df.shape", a: "Satır ve sütun sayısı" },
+        { q: "read_csv()", a: "CSV dosyası oku" },
+        { q: "to_excel()", a: "Excel'e kaydet" },
+        { q: "df.dropna()", a: "Eksik veriyi sil" },
+        { q: "df.fillna(0)", a: "Eksik veriyi doldur" },
+        { q: "groupby()", a: "Gruplama işlemi" },
+        { q: "merge()", a: "Tablo birleştirme (Join)" },
+        { q: "loc[]", a: "İsimle seçim" },
+        { q: "iloc[]", a: "İndeksle seçim" },
+        { q: "astype()", a: "Tip dönüşümü" },
+        { q: "value_counts()", a: "Değer sayma" },
+        { q: "mean()", a: "Ortalama alma" },
+        { q: "std()", a: "Standart sapma" },
+        { q: "to_datetime()", a: "Tarihe çevirme" },
+        { q: "dt.year", a: "Yıl bilgisini alma" },
+        { q: "sort_values()", a: "Sıralama yapma" },
+        { q: "drop_duplicates()", a: "Tekrarları silme" }
+    ];
+
+    // --- DEĞİŞKENLER ---
+    let score = 0;
+    let lives = 3;
+    let gameSpeed = 1.5; // Düşüş hızı (px/frame)
+    let currentBlock = null;
+    let currentQuestion = null;
+    let animationId = null;
+    let gameActive = false;
+    let blockPosition = -60;
+
+    const gameArea = document.getElementById('game-area');
+    const optionsContainer = document.getElementById('options-container');
+    const scoreEl = document.getElementById('score');
+    const livesEl = document.querySelector('.lives');
+
+    // --- OYUN MOTORU ---
+
+    function startGame() {
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('game-over-screen').classList.add('hidden');
+        
+        score = 0;
+        lives = 3;
+        gameSpeed = 1.5;
+        gameActive = true;
+        
+        updateStats();
+        spawnBlock();
+        gameLoop();
+    }
+
+    function resetGame() {
+        // Ekranda kalan blokları temizle
+        const existing = document.querySelector('.falling-block');
+        if(existing) existing.remove();
+        
+        startGame();
+    }
+
+    function spawnBlock() {
+        if(!gameActive) return;
+
+        // Rastgele soru seç
+        const qIndex = Math.floor(Math.random() * quizData.length);
+        currentQuestion = quizData[qIndex];
+
+        // Bloğu oluştur
+        const block = document.createElement('div');
+        block.className = 'falling-block';
+        block.innerText = currentQuestion.q;
+        gameArea.appendChild(block);
+        
+        currentBlock = block;
+        blockPosition = -60; // Ekranın hemen üstünden başla
+
+        // Butonları hazırla
+        prepareOptions(currentQuestion);
+    }
+
+    function prepareOptions(correctQ) {
+        optionsContainer.innerHTML = '';
+        
+        // Doğru cevap
+        let options = [correctQ.a];
+        
+        // 3 tane yanlış cevap (distractors)
+        while(options.length < 4) {
+            const rand = quizData[Math.floor(Math.random() * quizData.length)].a;
+            if(!options.includes(rand)) {
+                options.push(rand);
+            }
+        }
+
+        // Karıştır
+        options.sort(() => Math.random() - 0.5);
+
+        // Butonları ekle
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-option';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(opt, correctQ.a);
+            optionsContainer.appendChild(btn);
+        });
+    }
+
+    function gameLoop() {
+        if (!gameActive) return;
+
+        blockPosition += gameSpeed;
+        
+        if (currentBlock) {
+            currentBlock.style.top = blockPosition + 'px';
+
+            // Çarpışma kontrolü (Yere değdi mi?)
+            // gameArea'nın yüksekliğini alalım
+            const gameHeight = gameArea.clientHeight;
+            
+            // Eğer blok alt çizgiye değdiyse (yaklaşık değer)
+            if (blockPosition > gameHeight - 60) { 
+                handleMiss();
+            }
+        }
+
+        animationId = requestAnimationFrame(gameLoop);
+    }
+
+    function checkAnswer(selected, correct) {
+        if (!gameActive) return;
+
+        if (selected === correct) {
+            // DOĞRU
+            score += 10;
+            
+            // Her 50 puanda hızlandır
+            if(score % 50 === 0) {
+                gameSpeed += 0.5;
+                showFeedback("HIZLANIYOR!", "var(--neon-green)");
+            }
+
+            // Bloğu yok et ve yenisini getir
+            destroyBlock();
+            spawnBlock();
+        } else {
+            // YANLIŞ
+            handleMiss();
+        }
+        updateStats();
+    }
+
+    function handleMiss() {
+        // Can azalt
+        lives--;
+        updateStats();
+        
+        // Ekranı sars (basit bir efekt)
+        document.body.style.transform = "translateX(5px)";
+        setTimeout(() => document.body.style.transform = "translateX(0)", 100);
+
+        destroyBlock();
+
+        if (lives <= 0) {
+            gameOver();
+        } else {
+            spawnBlock();
+        }
+    }
+
+    function destroyBlock() {
+        if (currentBlock) {
+            currentBlock.remove();
+            currentBlock = null;
+        }
+    }
+
+    function updateStats() {
+        scoreEl.innerText = score;
+        livesEl.innerText = "❤".repeat(lives);
+    }
+
+    function showFeedback(text, color) {
+        const feedback = document.createElement('div');
+        feedback.innerText = text;
+        feedback.style.position = 'absolute';
+        feedback.style.top = '30%';
+        feedback.style.left = '50%';
+        feedback.style.transform = 'translate(-50%, -50%)';
+        feedback.style.color = color;
+        feedback.style.fontSize = '3rem';
+        feedback.style.fontWeight = 'bold';
+        feedback.style.textShadow = `0 0 20px ${color}`;
+        feedback.style.zIndex = '15';
+        document.body.appendChild(feedback);
+
+        setTimeout(() => feedback.remove(), 1000);
+    }
+
+    function gameOver() {
+        gameActive = false;
+        cancelAnimationFrame(animationId);
+        document.getElementById('final-score').innerText = score;
+        document.getElementById('game-over-screen').classList.remove('hidden');
+    }
+
+</script>
+
+</body>
+</html>

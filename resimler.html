@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Fotoğraf Galerisi</title>
+    <style>
+        /* Sayfa Genel Ayarları */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+
+        /* Başlık Alanı */
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+
+        header p {
+            margin-top: 10px;
+            font-size: 1.1rem;
+            color: #bdc3c7;
+        }
+
+        /* Galeri Izgarası (Grid) */
+        .gallery-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Fotoğraf Kartları */
+        .photo-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .photo-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            cursor: pointer;
+        }
+
+        /* Resim Ayarları */
+        .photo-card img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover; /* Resmin bozulmadan kutuya sığmasını sağlar */
+            display: block;
+        }
+
+        /* Kart İçeriği */
+        .card-content {
+            padding: 20px;
+        }
+
+        .card-content h3 {
+            margin: 0 0 10px;
+            color: #2c3e50;
+        }
+
+        .card-content p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        /* Alt Bilgi */
+        footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #2c3e50;
+            color: white;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Dünyadan Manzaralar</h1>
+        <p>Seçilmiş yüksek çözünürlüklü doğa ve şehir fotoğrafları</p>
+    </header>
+
+    <div class="gallery-container">
+        <div class="photo-card">
+            <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=800&auto=format&fit=crop" alt="Dağ Manzarası">
+            <div class="card-content">
+                <h3>Yüksek Zirveler</h3>
+                <p>Karlı dağların bulutlarla dans ettiği muazzam bir doğa harikası. Sessizliğin ve huzurun merkezi.</p>
+            </div>
+        </div>
+
+        <div class="photo-card">
+            <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop" alt="Okyanus Sahili">
+            <div class="card-content">
+                <h3>Sakin Sahiller</h3>
+                <p>Turkuaz suların altın sarısı kumlarla buluştuğu eşsiz bir plaj manzarası. Tatil hissini yaşatır.</p>
+            </div>
+        </div>
+
+        <div class="photo-card">
+            <img src="https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=800&auto=format&fit=crop" alt="Şehir Işıkları">
+            <div class="card-content">
+                <h3>Şehir Işıkları</h3>
+                <p>Gecenin karanlığında parlayan gökdelenler ve metropol yaşamının hiç durmayan enerjisi.</p>
+            </div>
+        </div>
+
+        <div class="photo-card">
+            <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=800&auto=format&fit=crop" alt="Orman Yolu">
+            <div class="card-content">
+                <h3>Gizemli Orman</h3>
+                <p>Güneş ışıklarının ağaçların arasından süzüldüğü, doğanın kalbine giden patika yol.</p>
+            </div>
+        </div>
+
+        <div class="photo-card">
+            <img src="https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?q=80&w=800&auto=format&fit=crop" alt="Çöl Kumulları">
+            <div class="card-content">
+                <h3>Sonsuz Çöl</h3>
+                <p>Rüzgarın şekillendirdiği kum tepeleri ve gün batımının kızıla boyadığı sıcak atmosfer.</p>
+            </div>
+        </div>
+
+        <div class="photo-card">
+            <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=800&auto=format&fit=crop" alt="Yalnız Gezgin">
+            <div class="card-content">
+                <h3>Özgürlük</h3>
+                <p>Sırt çantanı alıp doğanın kucağına atılmak. Keşfetmenin ve özgürlüğün en saf hali.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2024 Fotoğraf Galerisi - Tüm Hakları Saklıdır
+    </footer>
+
+</body>
+</html>

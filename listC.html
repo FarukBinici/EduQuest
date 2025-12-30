@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C++ STL List Testi</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #475569;
+            --success: #16a34a;
+            --error: #dc2626;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --code-bg: #1e293b;
+            --code-text: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: #1e293b;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: var(--primary);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 { margin: 0; font-size: 2rem; }
+        p.subtitle { opacity: 0.9; margin-top: 5px; }
+
+        .question-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s;
+        }
+
+        .question-number {
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 10px;
+            display: block;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        .code-block {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin: 15px 0;
+            border-left: 4px solid var(--primary);
+        }
+
+        .options {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+        }
+
+        .option-item {
+            margin-bottom: 10px;
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+        .option-item:hover {
+            border-color: var(--primary);
+            background-color: #eff6ff;
+        }
+
+        .option-item input[type="radio"] {
+            margin-right: 15px;
+            transform: scale(1.2);
+            accent-color: var(--primary);
+        }
+
+        /* Sonuç Gösterme Stilleri */
+        .correct-answer {
+            background-color: #dcfce7 !important;
+            border-color: var(--success) !important;
+            color: #14532d;
+        }
+
+        .wrong-answer {
+            background-color: #fee2e2 !important;
+            border-color: var(--error) !important;
+            color: #7f1d1d;
+        }
+
+        .explanation {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f1f5f9;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            border-left: 4px solid var(--secondary);
+        }
+
+        #submit-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-bottom: 50px;
+        }
+
+        #submit-btn:hover {
+            background-color: #1d4ed8;
+        }
+
+        #result-area {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            display: none;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            border: 2px solid var(--primary);
+        }
+
+        /* Kod renklendirme (basit) */
+        .kw { color: #c678dd; } /* Keyword */
+        .type { color: #e5c07b; } /* Type */
+        .func { color: #61afef; } /* Function */
+        .num { color: #d19a66; } /* Number */
+        .comment { color: #7f848e; font-style: italic; } /* Comment */
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>C++ STL List Sınavı</h1>
+        <p class="subtitle">Toplam 12 Soru | Başarılar!</p>
+    </header>
+
+    <div id="quiz-container">
+        </div>
+
+    <div id="result-area"></div>
+    <button id="submit-btn" onclick="checkAnswers()">Testi Bitir ve Sonuçları Gör</button>
+</div>
+
+<script>
+    const questions = [
+        {
+            id: 1,
+            text: "Aşağıdaki kod çalıştırıldığında ekrana ne yazdırılır?",
+            code: `<span class="type">list</span>&lt;<span class="type">int</span>&gt; lst;
+lst.<span class="func">push_back</span>(<span class="num">10</span>);
+lst.<span class="func">push_front</span>(<span class="num">20</span>);
+lst.<span class="func">push_back</span>(<span class="num">30</span>);
+<span class="func">printList</span>(lst);`,
+            options: [
+                "a) 10 20 30",
+                "b) 20 10 30",
+                "c) 30 10 20",
+                "d) 20 30 10"
+            ],
+            correct: 1 // b
+        },
+        {
+            id: 2,
+            text: "<code>lst.pop_back();</code> işlemi hangi elemanı listeden kaldırır?",
+            code: null,
+            options: [
+                "a) Listenin başındaki elemanı",
+                "b) Listenin sonundaki elemanı",
+                "c) Listenin ortasındaki elemanı",
+                "d) Hiçbir elemanı kaldırmaz"
+            ],
+            correct: 1 // b
+        },
+        {
+            id: 3,
+            text: "Aşağıdaki kod parçacığı çalıştırıldıktan sonra lst listesinde kaç eleman kalır?",
+            code: `<span class="type">list</span>&lt;<span class="type">int</span>&gt; lst = {<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>};
+lst.<span class="func">pop_front</span>();
+lst.<span class="func">pop_back</span>();`,
+            options: [
+                "a) 3",
+                "b) 4",
+                "c) 5",
+                "d) 2"
+            ],
+            correct: 0 // a
+        },
+        {
+            id: 4,
+            text: "<code>list&lt;int&gt;::iterator itr = lst.begin();</code> satırından hemen sonra <code>itr++</code> yapılırsa itr şimdi hangi elemanı gösterir?",
+            code: null,
+            options: [
+                "a) Listenin başındaki elemanı",
+                "b) Listenin ikinci elemanını",
+                "c) Listenin son elemanını",
+                "d) Hiçbir elemanı (end() konumunda)"
+            ],
+            correct: 1 // b
+        },
+        {
+            id: 5,
+            text: "Aşağıdaki kodda <code>lst.insert(itr, 99);</code> satırı itr'nin gösterdiği konumdan önce 99 değerini ekler. Bu doğru mu?",
+            code: null,
+            options: [
+                "a) Evet, insert itr'nin gösterdiği konumdan önce ekler",
+                "b) Hayır, insert itr'nin gösterdiği konumdan sonra ekler",
+                "c) insert itr'nin gösterdiği elemanı değiştirir",
+                "d) insert sadece listenin sonuna ekler"
+            ],
+            correct: 0 // a
+        },
+        {
+            id: 6,
+            text: "Verilen kod çalıştırıldığında ekrana ne yazdırılır?",
+            code: `<span class="type">list</span>&lt;<span class="type">int</span>&gt; lst;
+lst.<span class="func">push_back</span>(<span class="num">1</span>);
+lst.<span class="func">push_back</span>(<span class="num">2</span>);
+lst.<span class="func">push_back</span>(<span class="num">3</span>);
+<span class="kw">auto</span> itr = lst.<span class="func">begin</span>();
+itr++;
+itr++;
+lst.<span class="func">insert</span>(itr, <span class="num">2</span>, <span class="num">8</span>); <span class="comment">// 2 tane 8 ekle</span>
+<span class="func">printList</span>(lst);`,
+            options: [
+                "a) 1 2 3",
+                "b) 1 8 8 2 3",
+                "c) 1 2 8 8 3",
+                "d) 1 2 3 8 8"
+            ],
+            correct: 2 // c
+        },
+        {
+            id: 7,
+            text: "Aşağıdaki kod çalıştırıldıktan sonra lst listesinin içeriği nedir?",
+            code: `<span class="type">list</span>&lt;<span class="type">int</span>&gt; lst = {<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>};
+<span class="kw">auto</span> itr = lst.<span class="func">begin</span>();
+itr++; itr++; <span class="comment">// şimdi 30'u gösteriyor</span>
+lst.<span class="func">insert</span>(itr, <span class="num">2</span>, <span class="num">25</span>);
+<span class="func">printList</span>(lst);`,
+            options: [
+                "a) 10 20 25 25 30 40",
+                "b) 10 20 30 25 25 40",
+                "c) 10 25 25 20 30 40",
+                "d) 10 20 30 40 25 25"
+            ],
+            correct: 0 // a
+        },
+        {
+            id: 8,
+            text: "<code>lst.erase(itr);</code> komutu ne yapar?",
+            code: null,
+            options: [
+                "a) itr'nin gösterdiği elemanı listeden siler ve itr'yi bir sonraki elemana ilerletir",
+                "b) itr'nin gösterdiği elemanı siler ama itr geçersiz olur",
+                "c) Listenin tamamını siler",
+                "d) itr'den sonrasını siler"
+            ],
+            correct: 0 // a
+        },
+        {
+            id: 9,
+            text: "Aşağıdaki kod çalıştırıldığında ekrana ne yazdırılır?",
+            code: `<span class="type">list</span>&lt;<span class="type">int</span>&gt; lst = {<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>};
+<span class="kw">auto</span> itr = lst.<span class="func">begin</span>();
+itr++; itr++; <span class="comment">// şimdi 3'ü gösteriyor</span>
+lst.<span class="func">erase</span>(itr);
+<span class="func">printList</span>(lst);`,
+            options: [
+                "a) 1 2 4 5",
+                "b) 1 2 3 5",
+                "c) 1 3 4 5",
+                "d) 2 3 4 5"
+            ],
+            correct: 0 // a
+        },
+        {
+            id: 10,
+            text: "Verilen kodda yorum satırındaki liste doğru mu belirtilmiştir?",
+            code: `<span class="type">list</span>&lt;<span class="type">int</span>&gt; lst;
+<span class="comment">// 1, 2, 3, 4, 5 eklendi varsayalım</span>
+<span class="type">list</span>&lt;<span class="type">int</span>&gt;::<span class="type">iterator</span> itr = lst.<span class="func">begin</span>();
+itr++; itr++; itr++; <span class="comment">// 4'e geldi</span>
+lst.<span class="func">insert</span>(itr, <span class="num">2</span>, <span class="num">7</span>);
+<span class="comment">// Yorum: [1,2,3,7,7,4,5]</span>`,
+            options: [
+                "a) Evet, doğrudur",
+                "b) Hayır, insert işleminden önce 7'ler yoktur",
+                "c) Hayır, insert sonrası [1,2,3,4,7,7,5] olmalıdır",
+                "d) Hayır, insert listenin sonuna ekler"
+            ],
+            correct: 0 // a
+        },
+        {
+            id: 11,
+            text: "Kod çalıştırıldığında ekrana ne yazdırılır?",
+            code: `<span class="type">list</span>&lt;<span class="type">int</span>&gt; lst;
+<span class="comment">// 1,2,3,4,5 ekle</span>
+<span class="kw">auto</span> itr = lst.<span class="func">begin</span>();
+itr++; itr++; itr++; <span class="comment">// 4'ü gösteriyor</span>
+lst.<span class="func">insert</span>(itr, <span class="num">2</span>, <span class="num">7</span>); <span class="comment">// 4'ten önce iki 7</span>
+itr++; <span class="comment">// itr hala 4'teydi, şimdi 5'e geçti</span>
+lst.<span class="func">insert</span>(itr, <span class="num">2</span>, <span class="num">9</span>); <span class="comment">// 5'ten önce iki 9</span>
+lst.<span class="func">erase</span>(itr); <span class="comment">// 5'i sil</span>`,
+            options: [
+                "a) 1 2 3 7 7 4 9 9",
+                "b) 1 2 3 7 7 9 9 4 5",
+                "c) 1 2 3 7 7 4 9 9 5",
+                "d) 1 2 3 7 7 4 5 9 9"
+            ],
+            correct: 0 // a
+        },
+        {
+            id: 12,
+            text: "Aşağıdaki işlemlerden hangisi std::list için en verimli olanıdır? (O(1) zaman karmaşıklığı)",
+            code: null,
+            options: [
+                "a) Listenin ortasındaki bir elemanı silmek (iterator verilirse)",
+                "b) Listenin sonuna eleman eklemek",
+                "c) Listenin başına eleman eklemek",
+                "d) Hepsi"
+            ],
+            correct: 3 // d
+        }
+    ];
+
+    function renderQuiz() {
+        const container = document.getElementById('quiz-container');
+        questions.forEach((q, index) => {
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.innerHTML = `
+                <span class="question-number">Soru ${index + 1}</span>
+                <div class="question-text">${q.text}</div>
+                ${q.code ? `<div class="code-block">${q.code}</div>` : ''}
+                <ul class="options">
+                    ${q.options.map((opt, i) => `
+                        <li>
+                            <label class="option-item" id="q${index}-opt${i}">
+                                <input type="radio" name="q${index}" value="${i}">
+                                ${opt}
+                            </label>
+                        </li>
+                    `).join('')}
+                </ul>
+                <div class="explanation" id="expl-${index}"></div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function checkAnswers() {
+        let score = 0;
+        let answered = 0;
+
+        questions.forEach((q, index) => {
+            const selected = document.querySelector(`input[name="q${index}"]:checked`);
+            const explDiv = document.getElementById(`expl-${index}`);
+            
+            // Tüm seçeneklerin stilini sıfırla
+            for(let i=0; i<4; i++) {
+                document.getElementById(`q${index}-opt${i}`).classList.remove('correct-answer', 'wrong-answer');
+            }
+
+            if (selected) {
+                const val = parseInt(selected.value);
+                answered++;
+                
+                if (val === q.correct) {
+                    score++;
+                    document.getElementById(`q${index}-opt${val}`).classList.add('correct-answer');
+                    explDiv.style.display = 'block';
+                    explDiv.innerHTML = "✅ <strong>Doğru!</strong>";
+                    explDiv.style.color = "#14532d";
+                } else {
+                    document.getElementById(`q${index}-opt${val}`).classList.add('wrong-answer');
+                    document.getElementById(`q${index}-opt${q.correct}`).classList.add('correct-answer');
+                    explDiv.style.display = 'block';
+                    explDiv.innerHTML = "❌ <strong>Yanlış.</strong> Doğru cevap işaretlendi.";
+                    explDiv.style.color = "#7f1d1d";
+                }
+            } else {
+                // Boş bırakılanlar için doğruyu göster
+                document.getElementById(`q${index}-opt${q.correct}`).classList.add('correct-answer');
+                explDiv.style.display = 'block';
+                explDiv.innerHTML = "⚠️ <strong>Boş Bırakıldı.</strong>";
+            }
+        });
+
+        const resultArea = document.getElementById('result-area');
+        resultArea.style.display = 'block';
+        resultArea.innerHTML = `Sonuç: ${questions.length} sorudan ${score} doğru yaptınız.<br>Başarı Oranı: %${Math.round((score/questions.length)*100)}`;
+        
+        // Sayfayı yukarı kaydır (sonucu görsün)
+        resultArea.scrollIntoView({behavior: 'smooth'});
+        
+        // Butonu devre dışı bırak
+        document.getElementById('submit-btn').disabled = true;
+        document.getElementById('submit-btn').innerText = "Test Tamamlandı";
+    }
+
+    // Başlat
+    renderQuiz();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,231 @@
+    // --- SORULAR (GENİŞLETİLMİŞ VE ÇEŞİTLENDİRİLMİŞ) ---
+    const questions = [
+        {
+            title: "Temel: DataFrame Oluşturma",
+            mascot: "Pandas'ı içe aktarmak için standart kısaltma nedir?",
+            options: [
+                { text: "import pandas as pd", correct: true },
+                { text: "import pd", correct: false },
+                { text: "from pandas import *", correct: false },
+                { text: "import pandas", correct: false }
+            ],
+            explanation: "Pandas kütüphanesini 'pd' kısaltmasıyla kullanmak Python topluluğunda standart bir pratiktir."
+        },
+        {
+            title: "Dosya Okuma",
+            mascot: "Bir CSV dosyasını okuyup DataFrame'e çevirmek için hangi kod kullanılır?",
+            options: [
+                { text: "pd.read_csv('data.csv')", correct: true },
+                { text: "pd.to_csv('data.csv')", correct: false },
+                { text: "pd.read_excel('data.csv')", correct: false },
+                { text: "df.read('data.csv')", correct: false }
+            ],
+            explanation: "read_csv() fonksiyonu CSV dosyalarını okumak için kullanılır. to_csv() ise kaydetmek içindir."
+        },
+        {
+            title: "Veri İnceleme",
+            mascot: "DataFrame'in ilk 5 satırını görmek için hangi komutu kullanırız?",
+            code: "df._______()",
+            options: [
+                { text: "top()", correct: false },
+                { text: "head()", correct: true },
+                { text: "first()", correct: false },
+                { text: "show()", correct: false }
+            ],
+            explanation: "head() metodunu kullanarak verinin ilk birkaç satırına hızlıca göz atabilirsiniz."
+        },
+        {
+            title: "Veri Yapısı",
+            mascot: "df.shape komutu neyi döndürür?",
+            code: "df.shape  # Örnek çıktı: (100, 4)",
+            options: [
+                { text: "Sadece satır sayısı", correct: false },
+                { text: "(satır_sayısı, sütun_sayısı) tuple'ı", correct: true },
+                { text: "Toplam hücre sayısı", correct: false },
+                { text: "Sütun isimleri listesi", correct: false }
+            ],
+            explanation: "shape özelliği (satır, sütun) formatında bir tuple döndürür."
+        },
+        {
+            title: "Veri Temizleme",
+            mascot: "Eksik değerleri (NaN) içeren satırları silmek için hangi metodu kullanırız?",
+            options: [
+                { text: "df.fillna()", correct: false },
+                { text: "df.dropna()", correct: true },
+                { text: "df.remove_null()", correct: false },
+                { text: "df.clean()", correct: false }
+            ],
+            explanation: "dropna() eksik değerleri siler, fillna() ise doldurur."
+        },
+        {
+            title: "Sütun Seçimi",
+            mascot: "Bir sütunu seçmek için doğru söz dizimi hangisidir?",
+            options: [
+                { text: "df['Sütun_Adı']", correct: true },
+                { text: "df.get('Sütun_Adı')", correct: false },
+                { text: "df->Sütun_Adı", correct: false },
+                { text: "df::Sütun_Adı", correct: false }
+            ],
+            explanation: "Köşeli parantez notasyonu sütun seçimi için en yaygın yöntemdir."
+        },
+        {
+            title: "Filtreleme - Temel",
+            mascot: "Sadece 'Ankara' şehrine ait satırları nasıl seçersin?",
+            code: "df[df['Şehir'] ___ 'Ankara']",
+            options: [
+                { text: "===", correct: false },
+                { text: "==", correct: true },
+                { text: "=", correct: false },
+                { text: "equals", correct: false }
+            ],
+            explanation: "Python'da eşitlik kontrolü için çift eşittir (==) operatörü kullanılır."
+        },
+        {
+            title: "Filtreleme - İleri",
+            mascot: "Fiyatı 100'den büyük VE kategorisi 'Elektronik' olan ürünleri nasıl seçersin?",
+            options: [
+                { text: "df[df['Fiyat'] > 100 and df['Kategori'] == 'Elektronik']", correct: false },
+                { text: "df[(df['Fiyat'] > 100) & (df['Kategori'] == 'Elektronik')]", correct: true },
+                { text: "df[df['Fiyat'] > 100 && df['Kategori'] == 'Elektronik']", correct: false },
+                { text: "df.filter(Fiyat > 100, Kategori == 'Elektronik')", correct: false }
+            ],
+            explanation: "Pandas'ta mantıksal AND için '&' operatörü kullanılır ve her koşul parantez içinde olmalıdır."
+        },
+        {
+            title: "İstatistik - Ortalama",
+            mascot: "Bir sayısal sütunun ortalamasını almak için hangi metod kullanılır?",
+            code: "df['Fiyat']._______()",
+            options: [
+                { text: "avg()", correct: false },
+                { text: "mean()", correct: true },
+                { text: "average()", correct: false },
+                { text: "median()", correct: false }
+            ],
+            explanation: "mean() metodu aritmetik ortalamayı hesaplar."
+        },
+        {
+            title: "İstatistik - Özet",
+            mascot: "Tüm sayısal sütunların istatistiksel özetini görmek için?",
+            options: [
+                { text: "df.info()", correct: false },
+                { text: "df.describe()", correct: true },
+                { text: "df.summary()", correct: false },
+                { text: "df.stats()", correct: false }
+            ],
+            explanation: "describe() metodu count, mean, std, min, max gibi istatistikleri gösterir."
+        },
+        {
+            title: "Gruplama - Temel",
+            mascot: "Verileri kategoriye göre gruplamak için hangi metod kullanılır?",
+            code: "df._______(by='Kategori')",
+            options: [
+                { text: "group_by", correct: false },
+                { text: "groupby", correct: true },
+                { text: "group", correct: false },
+                { text: "categorize", correct: false }
+            ],
+            explanation: "groupby() metodu SQL'deki GROUP BY'a benzer şekilde çalışır."
+        },
+        {
+            title: "Gruplama - Aggregate",
+            mascot: "Her kategori için ortalama fiyat hesaplamak istiyorum:",
+            options: [
+                { text: "df.groupby('Kategori')['Fiyat'].mean()", correct: true },
+                { text: "df.group('Kategori').mean('Fiyat')", correct: false },
+                { text: "df['Fiyat'].groupby('Kategori').average()", correct: false },
+                { text: "df.category('Kategori').avg('Fiyat')", correct: false }
+            ],
+            explanation: "groupby() sonrası sütun seçip aggregasyon fonksiyonu uygularız."
+        },
+        {
+            title: "Sıralama",
+            mascot: "DataFrame'i bir sütuna göre büyükten küçüğe sıralamak için:",
+            code: "df.sort_values(by='Fiyat', ascending=___)",
+            options: [
+                { text: "True", correct: false },
+                { text: "False", correct: true },
+                { text: "DESC", correct: false },
+                { text: "Reverse", correct: false }
+            ],
+            explanation: "ascending=False parametresi azalan sıralama (büyükten küçüğe) yapar."
+        },
+        {
+            title: "Yeni Sütun Ekleme",
+            mascot: "DataFrame'e yeni bir sütun eklemek için doğru söz dizimi:",
+            options: [
+                { text: "df['Yeni_Sütun'] = değerler", correct: true },
+                { text: "df.add_column('Yeni_Sütun', değerler)", correct: false },
+                { text: "df.insert('Yeni_Sütun', değerler)", correct: false },
+                { text: "df.new_column('Yeni_Sütun') = değerler", correct: false }
+            ],
+            explanation: "Köşeli parantez ile atama yaparak yeni sütun oluşturabilirsiniz."
+        },
+        {
+            title: "Veri Tipleri",
+            mascot: "Her sütunun veri tipini görmek için hangi özellik kullanılır?",
+            options: [
+                { text: "df.types", correct: false },
+                { text: "df.dtypes", correct: true },
+                { text: "df.data_types", correct: false },
+                { text: "df.columns.types", correct: false }
+            ],
+            explanation: "dtypes özelliği her sütunun veri tipini gösterir (int64, float64, object vb.)."
+        },
+        {
+            title: "Tekil Değerler",
+            mascot: "Bir sütundaki benzersiz değerleri görmek için hangi metod kullanılır?",
+            code: "df['Kategori']._______()",
+            options: [
+                { text: "distinct()", correct: false },
+                { text: "unique()", correct: true },
+                { text: "different()", correct: false },
+                { text: "separate()", correct: false }
+            ],
+            explanation: "unique() metodu sütundaki tüm benzersiz değerleri döndürür."
+        },
+        {
+            title: "Satır Sayımı",
+            mascot: "Her kategoride kaç satır olduğunu saymak için:",
+            code: "df['Kategori']._______()",
+            options: [
+                { text: "count_values()", correct: false },
+                { text: "value_counts()", correct: true },
+                { text: "count()", correct: false },
+                { text: "group_count()", correct: false }
+            ],
+            explanation: "value_counts() her benzersiz değerin kaç kez geçtiğini sayar."
+        },
+        {
+            title: "İndeks İşlemleri",
+            mascot: "İndeksi sıfırlamak ve eski indeksi sütun olarak eklemek için:",
+            options: [
+                { text: "df.reset_index(drop=True)", correct: false },
+                { text: "df.reset_index()", correct: true },
+                { text: "df.reindex()", correct: false },
+                { text: "df.new_index()", correct: false }
+            ],
+            explanation: "reset_index() indeksi sıfırlar ve eski indeksi yeni sütun yapar. drop=True eklersek eski indeks silinir."
+        },
+        {
+            title: "Birleştirme - Merge",
+            mascot: "İki DataFrame'i ortak sütuna göre birleştirmek için:",
+            options: [
+                { text: "pd.join(df1, df2, on='ID')", correct: false },
+                { text: "pd.merge(df1, df2, on='ID')", correct: true },
+                { text: "pd.combine(df1, df2, key='ID')", correct: false },
+                { text: "df1.merge_with(df2, 'ID')", correct: false }
+            ],
+            explanation: "merge() fonksiyonu SQL JOIN'e benzer şekilde DataFrame'leri birleştirir."
+        },
+        {
+            title: "Eksik Veri Kontrolü",
+            mascot: "Her sütunda kaç eksik değer olduğunu görmek için:",
+            options: [
+                { text: "df.null_count()", correct: false },
+                { text: "df.isnull().sum()", correct: true },
+                { text: "df.count_nulls()", correct: false },
+                { text: "df.missing_values()", correct: false }
+            ],
+            explanation: "isnull() boolean değerler döndürür, sum() ile her sütundaki True sayısını buluruz."
+        }
+    ];

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Matplotlib Konu Testi</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #eef2f3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .quiz-container {
+            background-color: #fff;
+            width: 100%;
+            max-width: 600px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2c3e50;
+            margin: 0;
+        }
+        .question-box {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            font-weight: 600;
+            color: #34495e;
+        }
+        .options-box {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .option-btn {
+            padding: 12px 15px;
+            font-size: 1em;
+            border: 2px solid #bdc3c7;
+            background-color: transparent;
+            color: #2c3e50;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+        .option-btn:hover:not([disabled]) {
+            background-color: #f0f3f4;
+            border-color: #3498db;
+        }
+        .option-btn:disabled {
+            cursor: no-drop;
+        }
+        /* Doğru/Yanlış Renkleri */
+        .correct {
+            background-color: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724 !important;
+        }
+        .wrong {
+            background-color: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24 !important;
+        }
+        .feedback {
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: center;
+            height: 25px;
+        }
+        .next-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin-top: 20px;
+            display: none; /* Başlangıçta gizli */
+        }
+        .next-btn:hover {
+            background-color: #2980b9;
+        }
+        .result-box {
+            text-align: center;
+            display: none;
+        }
+        .score-display {
+            font-size: 2em;
+            color: #2c3e50;
+            margin: 20px 0;
+        }
+        .restart-btn {
+            padding: 10px 20px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <div class="header">
+        <h2>Matplotlib & Numpy Testi</h2>
+        <span id="progress">Soru 1 / 10</span>
+    </div>
+
+    <div id="quiz-area">
+        <div class="question-box" id="question">Soru yükleniyor...</div>
+        <div class="options-box" id="options">
+            </div>
+        <div class="feedback" id="feedback-msg"></div>
+        <button class="next-btn" id="next-btn" onclick="nextQuestion()">Sonraki Soru</button>
+    </div>
+
+    <div class="result-box" id="result-area">
+        <h3>Test Tamamlandı!</h3>
+        <p>Toplam Skorunuz:</p>
+        <div class="score-display" id="final-score">0 / 10</div>
+        <button class="restart-btn" onclick="location.reload()">Testi Tekrar Çöz</button>
+    </div>
+</div>
+
+<script>
+    // Sorular Veritabanı (Ders Notlarından Hazırlanmıştır)
+    const questions = [
+        {
+            q: "Jupyter Notebook'ta grafikleri hücrenin hemen altında (satır içi) görmek için kullanılan 'magic' komut hangisidir?",
+            options: ["import matplotlib.inline", "%matplotlib inline", "plt.show(inline=True)", "%graph inline"],
+            answer: 1 // 0-based index (B şıkkı)
+        },
+        {
+            q: "Veri görselleştirme ve analizinde Python listeleri yerine hangisinin kullanılması performans açısından önerilir?",
+            options: ["Python Sözlükleri (Dict)", "Pandas Serileri", "Numpy Dizileri (Arrays)", "Tuple Listeleri"],
+            answer: 2
+        },
+        {
+            q: "Matplotlib'de basit bir çizgi grafiği oluşturmak için kullanılan temel fonksiyon hangisidir?",
+            options: ["plt.draw()", "plt.create()", "plt.line()", "plt.plot()"],
+            answer: 3
+        },
+        {
+            q: "plt.subplot(1, 2, 1) komutundaki parametreler sırasıyla neyi ifade eder?",
+            options: ["(Genişlik, Yükseklik, Sıra)", "(Satır Sayısı, Sütun Sayısı, Grafik İndeksi)", "(X Ekseni, Y Ekseni, Z Ekseni)", "(Figür No, Eksen No, Renk)"],
+            answer: 1
+        },
+        {
+            q: "Nesne Yönelimli (Object Oriented) yaklaşımda, boş bir çerçeve (canvas) oluşturmak için hangi komut kullanılır?",
+            options: ["plt.figure()", "plt.canvas()", "plt.new()", "plt.start()"],
+            answer: 0
+        },
+        {
+            q: "add_axes([sol, alt, genişlik, yükseklik]) metodunda kullanılan değerler hangi aralıkta olmalıdır?",
+            options: ["0 ile 100 arasında", "0 ile 1 arasında", "-1 ile 1 arasında", "Piksel değeri olarak (örn: 500)"],
+            answer: 1
+        },
+        {
+            q: "Aynı figür üzerindeki grafiklerin eksenlerinin birbirine girmesini (üst üste binmesini) otomatik olarak engelleyen komut hangisidir?",
+            options: ["plt.fix_layout()", "plt.clean()", "plt.tight_layout()", "plt.organize()"],
+            answer: 2
+        },
+        {
+            q: "Bir grafikte hangi çizginin neyi ifade ettiğini gösteren kutucuğu (Legend) eklemek için hangi fonksiyon kullanılır?",
+            options: ["plt.title()", "plt.label()", "plt.legend()", "plt.info()"],
+            answer: 2
+        },
+        {
+            q: "Oluşturulan bir grafiği bilgisayara resim dosyası olarak kaydetmek için hangi metod kullanılır?",
+            options: ["plt.download()", "figure.savefig()", "plt.export()", "figure.write()"],
+            answer: 1
+        },
+        {
+            q: "İki diziyi (array) matematiksel işleme sokarken, örneğin 'dizi ** 2' işlemi ne yapar?",
+            options: ["Dizinin eleman sayısını ikiyle çarpar", "Hata verir", "Dizinin sadece ilk elemanının karesini alır", "Dizideki tüm elemanların tek tek karesini alır"],
+            answer: 3
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    const questionEl = document.getElementById("question");
+    const optionsEl = document.getElementById("options");
+    const feedbackEl = document.getElementById("feedback-msg");
+    const nextBtn = document.getElementById("next-btn");
+    const progressEl = document.getElementById("progress");
+    const quizArea = document.getElementById("quiz-area");
+    const resultArea = document.getElementById("result-area");
+    const finalScoreEl = document.getElementById("final-score");
+
+    function loadQuestion() {
+        // Sıfırlama
+        optionsEl.innerHTML = "";
+        feedbackEl.innerHTML = "";
+        feedbackEl.className = "feedback";
+        nextBtn.style.display = "none";
+
+        // Soruyu Getir
+        const currentQ = questions[currentQuestionIndex];
+        questionEl.textContent = (currentQuestionIndex + 1) + ". " + currentQ.q;
+        progressEl.textContent = `Soru ${currentQuestionIndex + 1} / ${questions.length}`;
+
+        // Şıkları Oluştur
+        currentQ.options.forEach((opt, index) => {
+            const btn = document.createElement("button");
+            btn.className = "option-btn";
+            btn.textContent = opt;
+            btn.onclick = () => checkAnswer(index, btn);
+            optionsEl.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(selectedIndex, selectedBtn) {
+        const correctIndex = questions[currentQuestionIndex].answer;
+        const allButtons = optionsEl.children;
+
+        // Tüm butonları devre dışı bırak
+        for (let btn of allButtons) {
+            btn.disabled = true;
+        }
+
+        if (selectedIndex === correctIndex) {
+            // Doğru Cevap
+            selectedBtn.classList.add("correct");
+            feedbackEl.textContent = "✅ Doğru Cevap!";
+            feedbackEl.style.color = "#155724";
+            score++;
+        } else {
+            // Yanlış Cevap
+            selectedBtn.classList.add("wrong");
+            feedbackEl.textContent = "❌ Yanlış! Doğru cevap: " + questions[currentQuestionIndex].options[correctIndex];
+            feedbackEl.style.color = "#721c24";
+            // Doğru olanı da yeşil yakalım ki öğrenci görsün
+            allButtons[correctIndex].classList.add("correct");
+        }
+
+        nextBtn.style.display = "block";
+    }
+
+    function nextQuestion() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < questions.length) {
+            loadQuestion();
+        } else {
+            showResults();
+        }
+    }
+
+    function showResults() {
+        quizArea.style.display = "none";
+        resultArea.style.display = "block";
+        progressEl.textContent = "Tamamlandı";
+        finalScoreEl.textContent = `${score} / ${questions.length}`;
+        
+        // Skora göre küçük bir mesaj
+        let message = "";
+        if(score === 10) message = "Mükemmel! Konuyu tamamen anlamışsın. 🏆";
+        else if(score > 7) message = "Gayet iyi! Ufak tefek eksikler var. 👏";
+        else message = "Konuyu tekrar gözden geçirmeni öneririm. 📚";
+        
+        let msgP = document.createElement("p");
+        msgP.textContent = message;
+        resultArea.insertBefore(msgP, finalScoreEl);
+    }
+
+    // İlk soruyu yükle
+    loadQuestion();
+
+</script>
+
+</body>
+</html>

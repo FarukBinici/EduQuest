@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pandas Eşleştirme Testi</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+            --success: #22c55e;
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: var(--primary);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 { margin: 0; font-size: 2rem; }
+        p.subtitle { opacity: 0.9; margin-top: 5px; }
+
+        .group-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+        }
+
+        .group-title {
+            font-size: 1.25rem;
+            color: var(--primary);
+            border-bottom: 2px solid var(--bg);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .matching-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        @media (max-width: 768px) {
+            .matching-area { grid-template-columns: 1fr; }
+        }
+
+        /* Sol Taraf (Sabit Sorular) */
+        .question-item {
+            background: #f1f5f9;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-family: 'Consolas', monospace;
+            font-weight: bold;
+            color: #334155;
+            min-height: 50px;
+        }
+
+        .drop-zone {
+            width: 40px;
+            height: 40px;
+            border: 2px dashed #cbd5e1;
+            border-radius: 6px;
+            background: white;
+            margin-left: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: sans-serif;
+            font-weight: bold;
+            color: var(--primary);
+            transition: all 0.2s;
+        }
+
+        .drop-zone.hovered {
+            background: #dbeafe;
+            border-color: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .drop-zone.filled {
+            border-style: solid;
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .drop-zone.correct { background: var(--success); border-color: var(--success); }
+        .drop-zone.incorrect { background: var(--error); border-color: var(--error); }
+
+        /* Sağ Taraf (Sürüklenebilir Cevaplar) */
+        .answers-pool {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .draggable-item {
+            background: white;
+            border: 1px solid #cbd5e1;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            cursor: grab;
+            font-size: 0.95rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .draggable-item:active { cursor: grabbing; }
+        .draggable-item.dragging { opacity: 0.5; }
+        
+        .draggable-item .id-badge {
+            background: var(--primary);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .btn-check {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: var(--text);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.2s;
+        }
+
+        .btn-check:hover { background: #0f172a; }
+        
+        .result-msg {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            min-height: 24px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Pandas Eşleştirme Testi</h1>
+        <p class="subtitle">Veri Bilimi ve Python Bilgini Sına</p>
+    </header>
+
+    <div id="quiz-container">
+        </div>
+</div>
+
+<script>
+    // Test Verisi
+    const quizData = [
+        {
+            title: "1. Komut ve Açıklama",
+            pairs: [
+                { q: "df.head()", a: "3", text: "İlk 5 satırı gösterir" },
+                { q: "df.tail()", a: "2", text: "Son 5 satırı gösterir" },
+                { q: "df.info()", a: "4", text: "Genel bilgi verir (tipler, eksik veriler)" },
+                { q: "df.describe()", a: "1", text: "İstatistiksel özet verir" },
+                { q: "df.shape", a: "5", text: "Boyut bilgisi verir (satır, sütun)" }
+            ]
+        },
+        {
+            title: "2. Veri Okuma/Yazma",
+            pairs: [
+                { q: "pd.read_csv()", a: "2", text: "CSV dosyası oku" },
+                { q: "pd.read_excel()", a: "4", text: "Excel dosyası oku" },
+                { q: "df.to_csv()", a: "3", text: "DataFrame'i CSV olarak kaydet" },
+                { q: "df.to_excel()", a: "1", text: "DataFrame'i Excel olarak kaydet" }
+            ]
+        },
+        {
+            title: "3. Seçim İşlemleri",
+            pairs: [
+                { q: "df['Sütun']", a: "4", text: "Tek sütun seçimi (Series döner)" },
+                { q: "df[['Sütun']]", a: "5", text: "Tek sütun seçimi (DataFrame döner)" },
+                { q: "df.iloc[0]", a: "3", text: "İlk satırı sayısal indeks ile seçme" },
+                { q: "df.loc['Ali']", a: "1", text: "İsimli indeks ile satır seçimi" },
+                { q: "df[df['Yaş'] > 30]", a: "2", text: "Koşullu filtreleme" }
+            ]
+        },
+        {
+            title: "4. Veri Temizleme",
+            pairs: [
+                { q: "df.isnull()", a: "3", text: "Eksik verileri kontrol et" },
+                { q: "df.dropna()", a: "4", text: "Eksik veri olan satırları sil" },
+                { q: "df.fillna(0)", a: "2", text: "Eksik verileri 0 ile doldur" },
+                { q: "df.drop_duplicates()", a: "1", text: "Tekrar eden satırları sil" }
+            ]
+        },
+        {
+            title: "5. Sıralama ve İstatistik",
+            pairs: [
+                { q: "df.sort_values('Yaş')", a: "3", text: "Yaşa göre sırala" },
+                { q: "df['Sütun'].mean()", a: "5", text: "Ortalama" },
+                { q: "df['Sütun'].max()", a: "1", text: "Maksimum değer" },
+                { q: "df['Sütun'].min()", a: "4", text: "Minimum değer" },
+                { q: "df['Sütun'].sum()", a: "2", text: "Toplam" }
+            ]
+        },
+        {
+            title: "6. Gruplama",
+            pairs: [
+                { q: "df.groupby('Şehir')['Yaş'].mean()", a: "3", text: "Şehre göre yaş ortalaması" },
+                { q: "df['Şehir'].unique()", a: "4", text: "Benzersiz şehirleri listele" },
+                { q: "df['Şehir'].nunique()", a: "1", text: "Benzersiz şehir sayısı" },
+                { q: "df['Şehir'].value_counts()", a: "2", text: "Her şehrin kaç kez geçtiğini say" }
+            ]
+        },
+        {
+            title: "7. Yeni Sütun Oluşturma",
+            pairs: [
+                { q: "df['Toplam'] = df['A'] + df['B']", a: "2", text: "İki sayısal sütunu topla" },
+                { q: "df['Kare'] = df['Sayı'] ** 2", a: "4", text: "Sayının karesini al" },
+                { q: "df['Tam_İsim'] = df['Ad'] + ' ' + df['Soyad']", a: "1", text: "İki string sütunu birleştir" },
+                { q: "df['Kategori'] = df['Yaş'].apply(fonksiyon)", a: "3", text: "Fonksiyon uygulayarak yeni sütun" }
+            ]
+        },
+        {
+            title: "8. Axis Parametresi",
+            pairs: [
+                { q: "axis=0", a: "1", text: "Satırlar boyunca işlem (index/dikey)" },
+                { q: "axis=1", a: "2", text: "Sütunlar boyunca işlem (columns/yatay)" }
+            ]
+        },
+        {
+            title: "9. Mantıksal Operatörler",
+            pairs: [
+                { q: "&", a: "3", text: "VE" },
+                { q: "|", a: "1", text: "VEYA" },
+                { q: "~", a: "2", text: "DEĞİL" }
+            ]
+        },
+        {
+            title: "10. Veri Tipleri",
+            pairs: [
+                { q: "df.astype(int)", a: "3", text: "Tam sayıya çevir" },
+                { q: "df.astype(float)", a: "2", text: "Ondalıklı sayıya çevir" },
+                { q: "df.astype(str)", a: "1", text: "String'e çevir" }
+            ]
+        },
+        {
+            title: "11. Tarih İşlemleri",
+            pairs: [
+                { q: "pd.to_datetime()", a: "2", text: "String'i tarihe çevir" },
+                { q: "df.dt.year", a: "3", text: "Yıl bilgisi" },
+                { q: "df.dt.month", a: "4", text: "Ay bilgisi" },
+                { q: "df.dt.day", a: "1", text: "Gün bilgisi" }
+            ]
+        },
+        {
+            title: "12. Birleştirme İşlemleri",
+            pairs: [
+                { q: "pd.merge()", a: "2", text: "Ortak sütuna göre birleştir (JOIN)" },
+                { q: "pd.concat()", a: "1", text: "Alt alta veya yan yana ekle" }
+            ]
+        },
+        {
+            title: "13. Metod ve Özellik",
+            pairs: [
+                { q: "df.shape", a: "3", text: "Boyut bilgisi" },
+                { q: "df.columns", a: "2", text: "Sütun isimleri" },
+                { q: "df.dtypes", a: "4", text: "Veri tipleri" },
+                { q: "df.size", a: "1", text: "Toplam eleman sayısı" }
+            ]
+        },
+        {
+            title: "14. En Büyük/Küçük Bulma",
+            pairs: [
+                { q: "idxmax()", a: "2", text: "En büyük değerin indeksi" },
+                { q: "idxmin()", a: "3", text: "En küçük değerin indeksi" },
+                { q: "nlargest(3)", a: "4", text: "En büyük 3 değer" },
+                { q: "nsmallest(3)", a: "1", text: "En küçük 3 değer" }
+            ]
+        },
+        {
+            title: "15. Parametreler",
+            pairs: [
+                { q: "ascending=False", a: "4", text: "Büyükten küçüğe sırala" },
+                { q: "index=False", a: "3", text: "Satır numaralarını yazma" },
+                { q: "inplace=True", a: "2", text: "Değişikliği kalıcı yap" },
+                { q: "on='ID'", a: "1", text: "Birleştirme için kullanılacak sütun" }
+            ]
+        }
+    ];
+
+    const container = document.getElementById('quiz-container');
+
+    // Testi oluştur
+    quizData.forEach((group, groupIndex) => {
+        const card = document.createElement('div');
+        card.className = 'group-card';
+
+        // Cevapları karıştır
+        const shuffledAnswers = [...group.pairs].sort(() => Math.random() - 0.5);
+
+        let leftSideHTML = '';
+        let rightSideHTML = '';
+
+        group.pairs.forEach((pair, idx) => {
+            const letter = String.fromCharCode(65 + idx); // A, B, C...
+            leftSideHTML += `
+                <div class="question-item">
+                    <span><b>${letter}.</b> ${pair.q}</span>
+                    <div class="drop-zone" data-correct="${pair.a}" data-group="${groupIndex}" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
+                </div>
+            `;
+        });
+
+        shuffledAnswers.forEach((pair) => {
+            rightSideHTML += `
+                <div class="draggable-item" draggable="true" ondragstart="drag(event)" id="drag-${groupIndex}-${pair.a}">
+                    <div class="id-badge">${pair.a}</div>
+                    ${pair.text}
+                </div>
+            `;
+        });
+
+        card.innerHTML = `
+            <div class="group-title">${group.title}</div>
+            <div class="matching-area">
+                <div class="questions-col">${leftSideHTML}</div>
+                <div class="answers-pool" id="pool-${groupIndex}" ondragover="allowDrop(event)" ondrop="dropToPool(event)">
+                    ${rightSideHTML}
+                </div>
+            </div>
+            <button class="btn-check" onclick="checkGroup(${groupIndex})">Kontrol Et</button>
+            <div class="result-msg" id="result-${groupIndex}"></div>
+        `;
+
+        container.appendChild(card);
+    });
+
+    // Sürükle Bırak Fonksiyonları
+    function allowDrop(ev) {
+        ev.preventDefault();
+        if(ev.target.classList.contains('drop-zone')) {
+            ev.target.classList.add('hovered');
+        }
+    }
+
+    function drag(ev) {
+        ev.dataTransfer.setData("text", ev.target.id);
+        ev.target.classList.add('dragging');
+    }
+
+    // Kutuya bırakma
+    function drop(ev) {
+        ev.preventDefault();
+        const dropZone = ev.target.closest('.drop-zone');
+        dropZone.classList.remove('hovered');
+        
+        const data = ev.dataTransfer.getData("text");
+        const draggedElement = document.getElementById(data);
+
+        // Eğer kutu doluysa, içindekini havuza geri at
+        if (dropZone.hasChildNodes()) {
+            const existingItem = dropZone.firstChild; // Sadece görsel ID numarasını taşıyoruz
+            // Burası biraz karmaşık olabilir, basit tutmak için:
+            // Sadece tek yönlü (havuzdan -> kutuya) izin verelim, kutu doluysa değiştirmesin.
+            return;
+        }
+
+        // Biz sadece ID numarasını kutuya yazacağız, tüm elementi taşımayacağız.
+        // Görsel basitlik için sadece ID'yi (1, 2, 3...) kutuya kopyalıyoruz.
+        const answerId = draggedElement.querySelector('.id-badge').innerText;
+        
+        dropZone.innerText = answerId;
+        dropZone.classList.add('filled');
+        dropZone.dataset.userAnswer = answerId;
+    }
+
+    // Cevapları Kontrol Et
+    function checkGroup(groupIndex) {
+        const card = document.querySelectorAll('.group-card')[groupIndex];
+        const zones = card.querySelectorAll('.drop-zone');
+        let correctCount = 0;
+        let total = zones.length;
+
+        zones.forEach(zone => {
+            const correctVal = zone.dataset.correct;
+            const userVal = zone.innerText;
+
+            zone.classList.remove('correct', 'incorrect');
+
+            if(userVal === correctVal) {
+                zone.classList.add('correct');
+                correctCount++;
+            } else {
+                zone.classList.add('incorrect');
+            }
+        });
+
+        const msgDiv = document.getElementById(`result-${groupIndex}`);
+        msgDiv.innerText = `${total} sorudan ${correctCount} doğru!`;
+        msgDiv.style.color = correctCount === total ? 'var(--success)' : 'var(--error)';
+    }
+
+    // Sürükleme bitince (görsel temizlik)
+    document.addEventListener('dragend', function(event) {
+        event.target.classList.remove('dragging');
+        document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('hovered'));
+    });
+</script>
+
+</body>
+</html>

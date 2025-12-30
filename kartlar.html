@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pandas Bilgi Kartları</title>
+    <style>
+        :root {
+            --bg: #eef2f3;
+            --primary: #150940; /* Koyu Lacivert */
+            --accent: #f50057;  /* Canlı Pembe */
+            --card-front: #ffffff;
+            --card-back: #283593;
+            --text-front: #333;
+            --text-back: #fff;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /* Başlık ve Kontroller */
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 { margin: 0; color: var(--primary); font-size: 2rem; }
+        p { color: #666; margin: 5px 0 0 0; }
+
+        .controls-top {
+            margin-top: 15px;
+        }
+
+        button {
+            background: white;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        button.shuffle-btn {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        button.shuffle-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* 3D Sahne */
+        .scene {
+            width: 600px;
+            height: 350px;
+            perspective: 1000px; /* 3D derinlik algısı */
+            margin: 20px;
+            cursor: pointer;
+        }
+
+        /* Kart Yapısı */
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); /* Yumuşak dönüş */
+            transform-style: preserve-3d;
+        }
+
+        .card.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        /* Ön ve Arka Yüz Ortak Özellikler */
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden; /* Arkası dönükken gizle */
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        /* Ön Yüz (Soru/Kod) */
+        .card-face.front {
+            background: var(--card-front);
+            color: var(--text-front);
+            border: 1px solid #ddd;
+        }
+
+        .category-badge {
+            position: absolute;
+            top: 20px;
+            background: #e0e7ff;
+            color: var(--primary);
+            padding: 5px 15px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .code-text {
+            font-family: 'Consolas', monospace;
+            font-size: 2.2rem;
+            color: #d63384; /* Kod rengi */
+            background: #f8f9fa;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px dashed #ccc;
+        }
+
+        .tap-hint {
+            position: absolute;
+            bottom: 20px;
+            font-size: 0.8rem;
+            color: #999;
+        }
+
+        /* Arka Yüz (Cevap) */
+        .card-face.back {
+            background: var(--card-back);
+            color: var(--text-back);
+            transform: rotateY(180deg); /* Başlangıçta arkası dönük */
+        }
+
+        .answer-text {
+            font-size: 1.6rem;
+            line-height: 1.4;
+            font-weight: 500;
+        }
+
+        /* Alt Navigasyon */
+        .navigation {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .nav-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .progress {
+            font-weight: bold;
+            color: #555;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        /* Mobil Uyum */
+        @media (max-width: 650px) {
+            .scene { width: 90%; height: 300px; }
+            .code-text { font-size: 1.5rem; }
+            .answer-text { font-size: 1.2rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Pandas Bilgi Kartları</h1>
+        <p>Öğrenmek için kartı çevir.</p>
+        <div class="controls-top">
+            <button class="shuffle-btn" onclick="shuffleCards()">🔀 Kartları Karıştır</button>
+        </div>
+    </header>
+
+    <div class="scene" onclick="flipCard()">
+        <div class="card" id="card">
+            <div class="card-face front">
+                <div class="category-badge" id="category">Veri Okuma</div>
+                <div class="code-text" id="question">df.head()</div>
+                <div class="tap-hint">👆 Çevirmek için tıkla veya Space'e bas</div>
+            </div>
+
+            <div class="card-face back">
+                <div class="answer-text" id="answer">İlk 5 satırı getirir.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <button class="nav-btn" onclick="prevCard()">❮</button>
+        <div class="progress" id="progress">1 / 20</div>
+        <button class="nav-btn" onclick="nextCard()">❯</button>
+    </div>
+
+<script>
+    // --- KART VERİLERİ ---
+    const rawData = [
+        { cat: "Genel", q: "import pandas as pd", a: "Pandas kütüphanesini 'pd' kısaltmasıyla projeye dahil eder." },
+        { cat: "Gözlem", q: "df.head()", a: "Veri setinin ilk 5 satırını gösterir." },
+        { cat: "Gözlem", q: "df.tail()", a: "Veri setinin son 5 satırını gösterir." },
+        { cat: "Gözlem", q: "df.shape", a: "Verinin boyutunu (Satır Sayısı, Sütun Sayısı) verir." },
+        { cat: "Gözlem", q: "df.info()", a: "Sütunların veri tiplerini ve bellek kullanımını gösterir." },
+        { cat: "Gözlem", q: "df.columns", a: "Sütun isimlerini liste halinde verir." },
+        { cat: "Dosya", q: "pd.read_csv('Dosya')", a: "CSV formatındaki dosyayı okuyup DataFrame'e çevirir." },
+        { cat: "Dosya", q: "df.to_excel('Dosya')", a: "Veriyi Excel formatında kaydeder." },
+        { cat: "Seçim", q: "df['Sütun']", a: "Belirtilen sütunu seçer (Series döner)." },
+        { cat: "Seçim", q: "df[['Sütun1', 'Sütun2']]", a: "Birden fazla sütunu seçer (DataFrame döner)." },
+        { cat: "Filtre", q: "df[df['Yas'] > 20]", a: "Yaşı 20'den büyük olan satırları filtreler." },
+        { cat: "İstatistik", q: "df.describe()", a: "Sayısal sütunların istatistiksel özetini (ort, min, max) verir." },
+        { cat: "İstatistik", q: "df['Sütun'].mean()", a: "Sütunun ortalamasını alır." },
+        { cat: "İstatistik", q: "df['Sütun'].value_counts()", a: "Hangi değerden kaç tane olduğunu sayar." },
+        { cat: "Temizlik", q: "df.dropna()", a: "Eksik veri (NaN) içeren satırları siler." },
+        { cat: "Temizlik", q: "df.fillna(0)", a: "Eksik verileri 0 ile doldurur." },
+        { cat: "Gruplama", q: "df.groupby('Grup')", a: "Veriyi belirli bir sütuna göre gruplar." },
+        { cat: "Sıralama", q: "df.sort_values('Sütun')", a: "Veriyi belirtilen sütuna göre sıralar (Küçükten Büyüğe)." },
+        { cat: "Zaman", q: "pd.to_datetime()", a: "String (metin) veriyi tarih formatına çevirir." },
+        { cat: "Birleştirme", q: "pd.merge()", a: "İki farklı veri setini ortak sütun üzerinden birleştirir (SQL Join)." }
+    ];
+
+    // --- DURUM YÖNETİMİ ---
+    let cards = [...rawData]; // Çalışma kopyası
+    let currentIndex = 0;
+    let isFlipped = false;
+
+    // --- DOM ELEMENTLERİ ---
+    const cardElement = document.getElementById('card');
+    const qEl = document.getElementById('question');
+    const aEl = document.getElementById('answer');
+    const cEl = document.getElementById('category');
+    const pEl = document.getElementById('progress');
+
+    // --- FONKSİYONLAR ---
+
+    function renderCard() {
+        const data = cards[currentIndex];
+        
+        // Eğer kart arkadaysa önce öne çevir (Animasyonsuz gibi hissettirmek için timeout)
+        if (isFlipped) {
+            cardElement.classList.remove('is-flipped');
+            isFlipped = false;
+            
+            // İçeriği kart döndükten hemen sonra güncelle ki kullanıcı cevabı görmesin
+            setTimeout(() => {
+                updateContent(data);
+            }, 200); 
+        } else {
+            updateContent(data);
+        }
+        
+        updateProgress();
+    }
+
+    function updateContent(data) {
+        qEl.innerText = data.q;
+        aEl.innerText = data.a;
+        cEl.innerText = data.cat;
+        
+        // Kategoriye göre renk değiştirme (Opsiyonel Güzellik)
+        const colors = {
+            "Genel": "#e0e7ff", "Gözlem": "#d1fae5", "Dosya": "#fee2e2",
+            "Seçim": "#fef3c7", "Filtre": "#e0f2fe", "İstatistik": "#fce7f3"
+        };
+        cEl.style.backgroundColor = colors[data.cat] || "#e0e7ff";
+        cEl.style.color = "#333";
+    }
+
+    function flipCard() {
+        cardElement.classList.toggle('is-flipped');
+        isFlipped = !isFlipped;
+    }
+
+    function nextCard() {
+        if (currentIndex < cards.length - 1) {
+            currentIndex++;
+            renderCard();
+        } else {
+            // Sona gelince başa dönme opsiyonu
+            if(confirm("Tüm kartlar bitti! Başa dönülsün mü?")) {
+                currentIndex = 0;
+                renderCard();
+            }
+        }
+    }
+
+    function prevCard() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            renderCard();
+        }
+    }
+
+    function shuffleCards() {
+        // Fisher-Yates Karıştırma Algoritması
+        for (let i = cards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [cards[i], cards[j]] = [cards[j], cards[i]];
+        }
+        currentIndex = 0;
+        isFlipped = false;
+        cardElement.classList.remove('is-flipped');
+        renderCard();
+    }
+
+    function updateProgress() {
+        pEl.innerText = `${currentIndex + 1} / ${cards.length}`;
+    }
+
+    // --- KLAVYE KONTROLLERİ ---
+    document.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') {
+            e.preventDefault(); // Sayfa kaymasını engelle
+            flipCard();
+        } else if (e.code === 'ArrowRight') {
+            nextCard();
+        } else if (e.code === 'ArrowLeft') {
+            prevCard();
+        }
+    });
+
+    // Başlangıç
+    renderCard();
+
+</script>
+
+</body>
+</html>

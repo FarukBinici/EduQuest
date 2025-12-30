@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pandas Kodlama Simülatörü</title>
+    <style>
+        :root {
+            --bg-dark: #1e1e1e;
+            --bg-panel: #252526;
+            --bg-editor: #1e1e1e;
+            --text-main: #d4d4d4;
+            --accent: #007acc;
+            --success: #4ec9b0;
+            --error: #f44747;
+            --border: #3c3c3c;
+            --yellow: #dcdcaa;
+            --blue: #569cd6;
+            --orange: #ce9178;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Üst Bar */
+        header {
+            background-color: #333333;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            height: 40px;
+        }
+
+        .brand {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .brand span { color: var(--success); }
+
+        .progress-indicator {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        /* Ana Alan */
+        .main-container {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 50px);
+        }
+
+        /* Sol Panel: Görevler */
+        .task-panel {
+            width: 350px;
+            background-color: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .task-card {
+            background: #2d2d30;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .task-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        .task-desc {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #ccc;
+        }
+
+        .hint-box {
+            background: #3c3c3c;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            display: none; /* Başlangıçta gizli */
+        }
+
+        .hint-btn {
+            background: none;
+            border: 1px solid #555;
+            color: #888;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            width: fit-content;
+            font-size: 0.8rem;
+        }
+
+        .hint-btn:hover { border-color: #777; color: #bbb; }
+
+        /* Sağ Panel: Editör ve Terminal */
+        .editor-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Kod Editörü */
+        .code-wrapper {
+            flex: 2;
+            position: relative;
+            background-color: var(--bg-editor);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tab-bar {
+            display: flex;
+            background: #2d2d2d;
+            margin: -20px -20px 10px -20px;
+            padding-left: 10px;
+        }
+
+        .tab {
+            padding: 8px 20px;
+            background: var(--bg-editor);
+            font-size: 0.9rem;
+            color: #fff;
+            border-top: 2px solid var(--accent);
+        }
+
+        textarea {
+            flex: 1;
+            background: transparent;
+            color: var(--text-main);
+            border: none;
+            resize: none;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            outline: none;
+            white-space: pre;
+            padding-left: 40px; /* Satır numarası için */
+        }
+
+        .line-numbers {
+            position: absolute;
+            left: 10px;
+            top: 60px; /* tab-bar ve padding payı */
+            font-family: 'Consolas', monospace;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #606060;
+            text-align: right;
+            width: 20px;
+            user-select: none;
+        }
+
+        /* Çalıştır Butonu */
+        .action-bar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .btn-run {
+            background-color: var(--success);
+            color: #1e1e1e;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.1s;
+        }
+
+        .btn-run:hover { background-color: #3cb39d; }
+        .btn-run:active { transform: scale(0.95); }
+
+        /* Terminal / Çıktı Ekranı */
+        .terminal {
+            flex: 1;
+            background-color: #111;
+            border-top: 1px solid var(--border);
+            padding: 15px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.95rem;
+            overflow-y: auto;
+        }
+
+        .terminal-header {
+            color: #aaa;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .output-line { margin-bottom: 5px; }
+        .success-msg { color: var(--success); }
+        .error-msg { color: var(--error); }
+        .system-msg { color: var(--blue); }
+        .df-preview {
+            color: var(--text-main);
+            background: #222;
+            padding: 10px;
+            border: 1px dashed #444;
+            margin-top: 10px;
+            white-space: pre-wrap;
+        }
+
+        /* Animasyonlar */
+        @keyframes blink { 50% { opacity: 0; } }
+        .cursor::after { content: '|'; animation: blink 1s infinite; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">
+            <span>⚡</span> PANDAS SIMULATOR
+        </div>
+        <div class="progress-indicator" id="level-indicator">Seviye 1 / 7</div>
+    </header>
+
+    <div class="main-container">
+        <aside class="task-panel">
+            <div class="task-card">
+                <div class="task-title" id="task-title">Yükleniyor...</div>
+                <div class="task-desc" id="task-desc">...</div>
+            </div>
+
+            <button class="hint-btn" onclick="toggleHint()">💡 İpucu Al</button>
+            <div class="hint-box" id="hint-box">
+                <span style="color:var(--yellow)">İpucu:</span> <span id="hint-text">...</span>
+            </div>
+        </aside>
+
+        <main class="editor-area">
+            <div class="code-wrapper">
+                <div class="tab-bar">
+                    <div class="tab">script.py</div>
+                </div>
+                <div class="line-numbers">1<br>2<br>3<br>4<br>5</div>
+                <textarea id="code-editor" spellcheck="false" placeholder="# Kodunu buraya yaz..."></textarea>
+                
+                <div class="action-bar">
+                    <button class="btn-run" onclick="runCode()">
+                        <span>▶</span> Çalıştır
+                    </button>
+                </div>
+            </div>
+
+            <div class="terminal" id="terminal">
+                <div class="terminal-header">
+                    <span>TERMINAL / OUTPUT</span>
+                    <span style="cursor:pointer" onclick="clearTerminal()">Temizle</span>
+                </div>
+                <div id="terminal-content">
+                    <div class="output-line system-msg">Pandas Simülasyon Ortamı Başlatıldı... v1.0</div>
+                    <div class="output-line system-msg">Görevleri tamamlamak için kodu yukarı yaz ve 'Çalıştır'a bas.</div>
+                    <br>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script>
+    // --- OYUN VERİLERİ ---
+    const levels = [
+        {
+            id: 1,
+            title: "Kütüphaneyi Çağırma",
+            desc: "Pandas ile çalışmaya başlamak için önce kütüphaneyi 'pd' takma adıyla (alias) import etmelisin.",
+            hint: "import ... as ... yapısını hatırla.",
+            validPatterns: [
+                /^import\s+pandas\s+as\s+pd\s*$/
+            ],
+            successMsg: "Harika! Pandas kütüphanesi yüklendi.",
+            preview: ""
+        },
+        {
+            id: 2,
+            title: "Veri Okuma",
+            desc: "'musteri.csv' adındaki dosyayı oku ve 'df' isminde bir değişkene ata.",
+            hint: "df = pd.read_csv('dosya_adi')",
+            validPatterns: [
+                /^df\s*=\s*pd\.read_csv\(['"]musteri\.csv['"]\)\s*$/
+            ],
+            successMsg: "Dosya başarıyla okundu! DataFrame bellekte.",
+            preview: "   Ad    Soyad   Yas  Harcama\n0  Ali   Yilmaz  25   1200.5\n1  Ayse  Demir   34   3400.0\n2  Veli  Can     28   800.0"
+        },
+        {
+            id: 3,
+            title: "İlk Satırlara Bakış",
+            desc: "Verinin doğru yüklendiğinden emin olmak için 'df' tablosunun ilk 5 satırını ekrana yazdır.",
+            hint: "Head fonksiyonunu kullan: df.metod()",
+            validPatterns: [
+                /^df\.head\(\)\s*$/,
+                /^print\(df\.head\(\)\)\s*$/
+            ],
+            successMsg: "İlk 5 satır listelendi.",
+            preview: "   Ad    Soyad   Yas  Harcama\n0  Ali   Yilmaz  25   1200.5\n1  Ayse  Demir   34   3400.0\n2  Veli  Can     28   800.0\n3  Can   Kara    45   120.0\n4  Zeynep Su     22   5000.0"
+        },
+        {
+            id: 4,
+            title: "Boyut Bilgisi",
+            desc: "Veri setinde kaç satır ve kaç sütun olduğunu öğrenmek istiyoruz. Hangi özelliği (attribute) kullanırsın?",
+            hint: "Parantez () kullanmadan .shape yazmalısın.",
+            validPatterns: [
+                /^df\.shape\s*$/,
+                /^print\(df\.shape\)\s*$/
+            ],
+            successMsg: "Boyut bilgisi alındı.",
+            preview: "(100, 4)"
+        },
+        {
+            id: 5,
+            title: "Sütun Seçimi",
+            desc: "Sadece 'Harcama' sütununu seç ve görüntüle.",
+            hint: "df['SütunAdı'] yapısını kullan.",
+            validPatterns: [
+                /^df\['Harcama'\]\s*$/,
+                /^df\["Harcama"\]\s*$/
+            ],
+            successMsg: "Sütun seçildi (Series formatında).",
+            preview: "0    1200.5\n1    3400.0\n2     800.0\n...  ...\nName: Harcama, dtype: float64"
+        },
+        {
+            id: 6,
+            title: "Filtreleme",
+            desc: "Harcaması 2000'den büyük olan müşterileri filtrele.",
+            hint: "df[ df['Harcama'] > 2000 ]",
+            validPatterns: [
+                /^df\[\s*df\['Harcama'\]\s*>\s*2000\s*\]\s*$/,
+                /^df\[\s*df\["Harcama"\]\s*>\s*2000\s*\]\s*$/
+            ],
+            successMsg: "Filtreleme başarılı! Büyük harcama yapanlar listelendi.",
+            preview: "   Ad    Soyad   Yas  Harcama\n1  Ayse  Demir   34   3400.0\n4  Zeynep Su     22   5000.0\n9  Metin Yildiz  50   2100.0"
+        },
+        {
+            id: 7,
+            title: "İstatistik (Ortalama)",
+            desc: "Müşterilerin 'Yas' ortalamasını hesapla.",
+            hint: "mean() fonksiyonunu 'Yas' sütununa uygula.",
+            validPatterns: [
+                /^df\['Yas'\]\.mean\(\)\s*$/,
+                /^df\["Yas"\]\.mean\(\)\s*$/
+            ],
+            successMsg: "Tebrikler! Simülasyonu başarıyla tamamladın.",
+            preview: "32.4"
+        }
+    ];
+
+    // --- DEĞİŞKENLER ---
+    let currentLevelIndex = 0;
+    const editor = document.getElementById('code-editor');
+    const terminalContent = document.getElementById('terminal-content');
+    const hintBox = document.getElementById('hint-box');
+
+    // --- BAŞLANGIÇ ---
+    loadLevel(0);
+
+    // --- FONKSİYONLAR ---
+
+    function loadLevel(index) {
+        if (index >= levels.length) {
+            finishGame();
+            return;
+        }
+        
+        const level = levels[index];
+        document.getElementById('task-title').innerText = `#${level.id} ${level.title}`;
+        document.getElementById('task-desc').innerText = level.desc;
+        document.getElementById('hint-text').innerText = level.hint;
+        document.getElementById('level-indicator').innerText = `Seviye ${index + 1} / ${levels.length}`;
+        
+        // Editörü temizle
+        editor.value = "";
+        editor.focus();
+        
+        // İpucunu gizle
+        hintBox.style.display = 'none';
+        
+        // Terminale bilgi bas
+        logToTerminal(`>> GÖREV ${level.id} YÜKLENDİ: ${level.title}`, 'system-msg');
+    }
+
+    function toggleHint() {
+        hintBox.style.display = hintBox.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function runCode() {
+        const userCode = editor.value.trim();
+        const level = levels[currentLevelIndex];
+
+        logToTerminal(`> ${userCode}`); // Kullanıcı kodunu bas
+
+        // Boş ise uyarı
+        if (!userCode) {
+            logToTerminal("Hata: Kod alanı boş olamaz.", "error-msg");
+            return;
+        }
+
+        // Kontrol mantığı
+        let isCorrect = false;
+        for (let pattern of level.validPatterns) {
+            if (pattern.test(userCode)) {
+                isCorrect = true;
+                break;
+            }
+        }
+
+        // Basit bir "typo" kontrolü veya esneklik (Opsiyonel: Tırnak işaretlerini standartlaştırıp tekrar dene)
+        if (!isCorrect) {
+            const normalized = userCode.replace(/"/g, "'").replace(/\s+/g, ' ').trim();
+            // Regexleri tekrar bu normalize string üzerinde dene (Basit simülasyon için)
+            // Bu örnekte regexler zaten esnek yazıldı ama yine de hata mesajı verelim.
+        }
+
+        if (isCorrect) {
+            // BAŞARILI
+            logToTerminal(level.successMsg, "success-msg");
+            if (level.preview) {
+                const previewDiv = document.createElement('div');
+                previewDiv.className = 'df-preview';
+                previewDiv.innerText = level.preview;
+                terminalContent.appendChild(previewDiv);
+            }
+            
+            // Biraz bekle sonra diğer levele geç
+            setTimeout(() => {
+                currentLevelIndex++;
+                if(currentLevelIndex < levels.length) {
+                    logToTerminal("-----------------------------------", "system-msg");
+                    loadLevel(currentLevelIndex);
+                } else {
+                    finishGame();
+                }
+            }, 1500);
+
+        } else {
+            // BAŞARISIZ
+            logToTerminal("Hata: Kod beklenen çıktıyı üretmedi veya sözdizimi yanlış.", "error-msg");
+            logToTerminal("İpucu: Yazım hatalarını ve parantezleri kontrol et.", "system-msg");
+        }
+        
+        scrollToBottom();
+    }
+
+    function logToTerminal(text, type = '') {
+        const div = document.createElement('div');
+        div.className = `output-line ${type}`;
+        div.innerText = text;
+        terminalContent.appendChild(div);
+        scrollToBottom();
+    }
+
+    function clearTerminal() {
+        terminalContent.innerHTML = "";
+    }
+
+    function scrollToBottom() {
+        const terminal = document.getElementById('terminal');
+        terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    function finishGame() {
+        const div = document.createElement('div');
+        div.style.marginTop = "20px";
+        div.style.padding = "20px";
+        div.style.backgroundColor = "#1e1e1e";
+        div.style.border = "2px solid #4ec9b0";
+        div.style.color = "#4ec9b0";
+        div.style.textAlign = "center";
+        div.innerHTML = "<h2>🎉 TEBRİKLER! 🎉</h2><p>Tüm Pandas görevlerini başarıyla tamamladın.</p>";
+        
+        document.querySelector('.main-container').innerHTML = "";
+        document.querySelector('.main-container').appendChild(div);
+    }
+    
+    // Enter tuşuna basınca çalıştırma (Shift+Enter daha mantıklı IDE'lerde ama burada basitlik için)
+    editor.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && e.ctrlKey) {
+            runCode();
+        }
+    });
+
+</script>
+
+</body>
+</html>

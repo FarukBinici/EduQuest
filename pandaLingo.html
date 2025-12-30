@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PandaLingo - Pandas Öğren</title>
+    <style>
+        :root {
+            --duo-green: #58cc02;
+            --duo-green-dark: #46a302;
+            --duo-red: #ff4b4b;
+            --duo-red-dark: #ea2b2b;
+            --duo-blue: #1cb0f6;
+            --duo-gray: #e5e5e5;
+            --duo-text: #3c3c3c;
+            --bg: #fff;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--duo-text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh; /* Ekran boyunu sabitle */
+            overflow: hidden; /* Dış çerçevede kaydırmayı kapat */
+        }
+
+        /* --- HEADER --- */
+        header {
+            display: flex;
+            align-items: center;
+            padding: 20px 5%;
+            gap: 15px;
+            flex-shrink: 0; /* Header sıkışmasın */
+            background: #fff;
+            z-index: 5;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .close-btn {
+            font-size: 1.5rem;
+            color: #afafaf;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .progress-container {
+            flex: 1;
+            height: 16px;
+            background: var(--duo-gray);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--duo-green);
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .hearts {
+            color: var(--duo-red);
+            font-weight: bold;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
+        /* --- OYUN ALANI (SCROLL) --- */
+        .game-area {
+            flex: 1; /* Kalan tüm boşluğu kapla */
+            padding: 20px 5%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* İçerik yukarıdan başlasın */
+            align-items: center;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 90%;
+            
+            /* KAYDIRMA AYARLARI */
+            overflow-y: auto; /* Sığmazsa dikey kaydırma aç */
+            padding-bottom: 120px; /* En alttaki butonun arkasında kalmaması için boşluk */
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #3c3c3c;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        /* Maskot */
+        .mascot-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+            justify-content: center;
+        }
+        .mascot { font-size: 3rem; }
+        .speech-bubble {
+            border: 2px solid #e5e5e5;
+            padding: 12px 20px;
+            border-radius: 18px;
+            position: relative;
+            color: #4b4b4b;
+            font-size: 1rem;
+            line-height: 1.4;
+            background: #fff;
+            max-width: 70%;
+        }
+        .speech-bubble::before {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-width: 10px 12px 10px 0;
+            border-style: solid;
+            border-color: transparent #e5e5e5 transparent transparent;
+        }
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            left: -9px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-width: 10px 12px 10px 0;
+            border-style: solid;
+            border-color: transparent #fff transparent transparent;
+        }
+
+        /* Kod Bloğu */
+        .code-block {
+            background:#f1f5f9; 
+            padding:20px; 
+            border-radius:12px; 
+            font-family:'Consolas', monospace; 
+            margin-bottom:25px; 
+            font-size:1.1rem; 
+            text-align:center; 
+            border:2px solid #e2e8f0; 
+            color:#475569;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Seçenekler */
+        .options-grid {
+            display: grid;
+            gap: 12px;
+            width: 100%;
+            padding-bottom: 20px;
+        }
+        
+        .option-card {
+            border: 2px solid #e5e5e5;
+            border-bottom: 4px solid #e5e5e5;
+            border-radius: 16px;
+            padding: 15px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: 0.1s;
+            background: white;
+        }
+
+        .option-card:hover { background: #f7f7f7; }
+        
+        .option-card.active {
+            border-color: var(--duo-blue);
+            background: #ddf4ff;
+            color: #1899d6;
+            border-bottom-color: #1899d6;
+        }
+
+        .key-hint {
+            border: 1px solid #e5e5e5;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            color: #999;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        /* --- FOOTER (SABİT ALT) --- */
+        footer {
+            padding: 20px 5%;
+            border-top: 2px solid #e5e5e5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #fff;
+            flex-shrink: 0;
+            z-index: 10;
+            position: relative;
+        }
+
+        .btn-check {
+            background: var(--duo-green);
+            color: white;
+            border: none;
+            border-bottom: 4px solid var(--duo-green-dark);
+            padding: 15px 0;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            max-width: 600px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.1s;
+        }
+
+        .btn-check:active {
+            transform: translateY(2px);
+            border-bottom-width: 0;
+            margin-top: 4px;
+        }
+
+        .btn-check:disabled {
+            background: #e5e5e5;
+            border-color: #cfcfcf;
+            color: #afafaf;
+            cursor: default;
+        }
+
+        /* --- FEEDBACK SHEET --- */
+        .feedback-sheet {
+            position: fixed;
+            bottom: -300px;
+            left: 0;
+            width: 100%;
+            padding: 20px 5%;
+            box-sizing: border-box;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            transition: bottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            z-index: 20;
+            max-height: 50vh;
+        }
+
+        @media (min-width: 600px) {
+            .feedback-sheet {
+                flex-direction: row;
+                padding: 30px 10%;
+            }
+        }
+
+        .feedback-sheet.correct {
+            background: #d7ffb8;
+            color: var(--duo-green-dark);
+            bottom: 0;
+        }
+
+        .feedback-sheet.wrong {
+            background: #ffdfe0;
+            color: var(--duo-red-dark);
+            bottom: 0;
+        }
+
+        .feedback-content {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .feedback-icon {
+            font-size: 1.5rem;
+            background: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .btn-continue {
+            padding: 15px 40px;
+            border-radius: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .btn-continue.correct {
+            background: var(--duo-green);
+            color: white;
+            border-bottom: 4px solid var(--duo-green-dark);
+        }
+        
+        .btn-continue.wrong {
+            background: var(--duo-red);
+            color: white;
+            border-bottom: 4px solid var(--duo-red-dark);
+        }
+
+        /* --- END SCREEN --- */
+        .end-screen {
+            text-align: center;
+            display: none;
+            margin-top: 50px;
+            padding: 0 20px;
+            overflow-y: auto;
+            height: 100%;
+        }
+        .xp-circle {
+            width: 120px;
+            height: 120px;
+            border: 8px solid #ffc800;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: #ffc800;
+            margin: 0 auto 20px;
+            font-weight: bold;
+            box-shadow: 0 8px 0 #e5b400;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="close-btn">✕</a>
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <div class="hearts">
+            ❤️ <span id="lives">5</span>
+        </div>
+    </header>
+
+    <div class="game-area" id="game-area">
+        </div>
+
+    <div class="end-screen" id="end-screen">
+        <div class="xp-circle">+100 XP</div>
+        <h2>Bölüm Tamamlandı!</h2>
+        <p>Pandas konusunda harika bir iş çıkardın. Seriyi bozma!</p>
+        <button class="btn-check" onclick="location.reload()" style="max-width:200px">Tekrar Oyna</button>
+        <br><br>
+        <a href="index.html" style="color:var(--duo-blue); text-decoration:none; font-weight:bold; font-size: 1.1rem;">ANA MENÜYE DÖN</a>
+    </div>
+
+    <footer id="footer-controls">
+        <button class="btn-check" id="check-btn" onclick="checkAnswer()" disabled>KONTROL ET</button>
+    </footer>
+
+    <div class="feedback-sheet" id="feedback-sheet">
+        <div class="feedback-content">
+            <div class="feedback-icon" id="feedback-icon">✓</div>
+            <div>
+                <h3 style="margin:0; font-size:1.5rem;" id="feedback-title">Harika!</h3>
+                <p style="margin:5px 0 0 0; font-size:1rem;" id="feedback-msg"></p>
+            </div>
+        </div>
+        <button class="btn-continue" id="continue-btn" onclick="nextQuestion()">DEVAM ET</button>
+    </div>
+
+<script>
+    // --- SORULAR (TEST FORMATINDA) ---
+    const questions = [
+        {
+            title: "Dosya Okuma",
+            mascot: "Bir CSV dosyasını okuyup DataFrame'e çevirmek için hangi kod kullanılır?",
+            options: [
+                { text: "pd.read_csv('data.csv')", correct: true },
+                { text: "pd.to_csv('data.csv')", correct: false },
+                { text: "pd.read_excel('data.csv')", correct: false },
+                { text: "df.read('data.csv')", correct: false }
+            ]
+        },
+        {
+            title: "Veri Temizleme",
+            mascot: "Hangi komut 'Eksik Verileri (NaN)' veri setinden tamamen siler?",
+            options: [
+                { text: "df.fillna()", correct: false },
+                { text: "df.dropna()", correct: true },
+                { text: "df.delete_null()", correct: false },
+                { text: "df.drop()", correct: false }
+            ]
+        },
+        {
+            title: "Veri Analizi",
+            mascot: "Bir sütundaki değerlerin ortalamasını almak istiyorum.",
+            code: "df['Fiyat']._______()",
+            options: [
+                { text: "sum", correct: false },
+                { text: "count", correct: false },
+                { text: "mean", correct: true },
+                { text: "average", correct: false }
+            ]
+        },
+        {
+            title: "Veri İnceleme",
+            mascot: "df.head() komutu varsayılan olarak kaç satır gösterir?",
+            options: [
+                { text: "10", correct: false },
+                { text: "1", correct: false },
+                { text: "5", correct: true },
+                { text: "Tümünü", correct: false }
+            ]
+        },
+        {
+            title: "Kod Tahmini",
+            mascot: "Aşağıdaki kodun çıktısı ne olur?",
+            code: "df.shape  # (100 satır, 4 sütun)",
+            options: [
+                { text: "(100, 4)", correct: true },
+                { text: "400", correct: false },
+                { text: "[100, 4]", correct: false },
+                { text: "100", correct: false }
+            ]
+        },
+        {
+            title: "Filtreleme",
+            mascot: "Sadece 'Ankara' şehrine ait verileri nasıl seçersin?",
+            options: [
+                { text: "df['Şehir'] == 'Ankara'", correct: false },
+                { text: "df[df['Şehir'] == 'Ankara']", correct: true },
+                { text: "df.filter('Ankara')", correct: false },
+                { text: "df.query('Ankara')", correct: false }
+            ]
+        },
+        {
+            title: "Gruplama",
+            mascot: "Kategorik verileri gruplamak için kullanılan sihirli kelime nedir?",
+            options: [
+                { text: "group_by", correct: false },
+                { text: "sort_values", correct: false },
+                { text: "groupby", correct: true },
+                { text: "cluster", correct: false }
+            ]
+        }
+    ];
+
+    // --- DEĞİŞKENLER ---
+    let currentQIndex = 0;
+    let lives = 5;
+    let selectedOption = null;
+
+    // --- ELEMENTLER ---
+    const gameArea = document.getElementById('game-area');
+    const checkBtn = document.getElementById('check-btn');
+    const progressBar = document.getElementById('progress-bar');
+    const feedbackSheet = document.getElementById('feedback-sheet');
+    const feedbackTitle = document.getElementById('feedback-title');
+    const feedbackMsg = document.getElementById('feedback-msg');
+    const feedbackIcon = document.getElementById('feedback-icon');
+    const continueBtn = document.getElementById('continue-btn');
+    const livesEl = document.getElementById('lives');
+
+    // --- BAŞLAT ---
+    loadQuestion();
+
+    // --- SORU YÜKLEME ---
+    function loadQuestion() {
+        if (currentQIndex >= questions.length) {
+            finishGame();
+            return;
+        }
+
+        const q = questions[currentQIndex];
+        const progress = (currentQIndex / questions.length) * 100;
+        progressBar.style.width = `${progress}%`;
+        
+        // Reset States
+        selectedOption = null;
+        checkBtn.disabled = true;
+        feedbackSheet.style.bottom = "-300px"; 
+        gameArea.innerHTML = ""; 
+
+        // Başlık ve Maskot
+        let contentHTML = `
+            <h2>${q.title}</h2>
+            <div class="mascot-container">
+                <div class="mascot">🐼</div>
+                <div class="speech-bubble">${q.mascot}</div>
+            </div>
+        `;
+
+        // Eğer kod parçası varsa ekle
+        if (q.code) {
+            contentHTML += `
+                <div class="code-block">
+                    ${q.code}
+                </div>
+            `;
+        }
+
+        // Seçenekleri oluştur
+        contentHTML += `<div class="options-grid">`;
+        q.options.forEach((opt, idx) => {
+            contentHTML += `
+                <div class="option-card" onclick="selectOption(${idx}, this)">
+                    <span class="key-hint">${idx + 1}</span> ${opt.text}
+                </div>
+            `;
+        });
+        contentHTML += `</div>`;
+
+        gameArea.innerHTML = contentHTML;
+    }
+
+    function selectOption(idx, element) {
+        // Öncekilerin seçimini kaldır
+        document.querySelectorAll('.option-card').forEach(el => el.classList.remove('active'));
+        
+        // Yeni seçimi işaretle
+        element.classList.add('active');
+        selectedOption = idx;
+        checkBtn.disabled = false;
+        
+        // Sayfa aşağı kaysın (mobil için kolaylık)
+        checkBtn.scrollIntoView({behavior: "smooth", block: "center"});
+    }
+
+    // --- KONTROL ET ---
+    function checkAnswer() {
+        const q = questions[currentQIndex];
+        const isCorrect = q.options[selectedOption].correct;
+        showFeedback(isCorrect, q);
+    }
+
+    function showFeedback(isCorrect, question) {
+        feedbackSheet.classList.remove('correct', 'wrong');
+        continueBtn.classList.remove('correct', 'wrong');
+        
+        if (isCorrect) {
+            // DOĞRU
+            feedbackSheet.classList.add('correct');
+            continueBtn.classList.add('correct');
+            feedbackTitle.innerText = "Harika!";
+            feedbackMsg.innerText = "";
+            feedbackIcon.innerText = "✓";
+            feedbackIcon.style.color = "var(--duo-green)";
+        } else {
+            // YANLIŞ
+            lives--;
+            livesEl.innerText = lives;
+            
+            feedbackSheet.classList.add('wrong');
+            continueBtn.classList.add('wrong');
+            feedbackTitle.innerText = "Yanlış Cevap";
+            feedbackIcon.innerText = "✕";
+            feedbackIcon.style.color = "var(--duo-red)";
+            
+            // Doğru cevabı bul ve göster
+            const correctOpt = question.options.find(o => o.correct).text;
+            feedbackMsg.innerHTML = `Doğru cevap:<br><strong>${correctOpt}</strong>`;
+
+            if (lives === 0) {
+                alert("Canların bitti! Başa dönüyorsun.");
+                location.reload();
+                return;
+            }
+        }
+        
+        // Footer'ı gizle, feedback'i aç
+        document.getElementById('footer-controls').style.display = 'none';
+        feedbackSheet.style.bottom = "0";
+    }
+
+    function nextQuestion() {
+        currentQIndex++;
+        document.getElementById('footer-controls').style.display = 'flex';
+        loadQuestion();
+    }
+
+    function finishGame() {
+        gameArea.style.display = 'none';
+        document.getElementById('footer-controls').style.display = 'none';
+        document.querySelector('header').style.display = 'none';
+        document.getElementById('end-screen').style.display = 'block';
+    }
+
+</script>
+
+</body>
+</html>

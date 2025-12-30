@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pandas Veri Dedektifi</title>
+    <style>
+        :root { --bg: #1a1a1a; --card: #2d2d2d; --text: #e0e0e0; --accent: #ff9800; --green: #4caf50; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; display: flex; gap: 20px; height: 100vh; margin: 0; box-sizing: border-box; }
+        
+        /* Sol Panel: Hikaye ve Kontrol */
+        .panel-left { width: 350px; display: flex; flex-direction: column; gap: 20px; }
+        .story-card { background: var(--card); padding: 20px; border-left: 5px solid var(--accent); border-radius: 8px; }
+        .clue-box { background: #333; padding: 15px; border-radius: 8px; margin-top: 10px; color: #fff; font-style: italic; }
+        .options-grid { display: grid; gap: 10px; }
+        button { background: #444; border: 1px solid #555; color: white; padding: 15px; cursor: pointer; text-align: left; font-family: monospace; transition: 0.2s; border-radius: 5px; }
+        button:hover { background: #555; border-color: var(--accent); }
+        
+        /* Sağ Panel: Veri Tablosu */
+        .panel-right { flex: 1; background: var(--card); border-radius: 8px; padding: 20px; overflow: auto; display: flex; flex-direction: column; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #444; }
+        th { color: var(--accent); }
+        tr.eliminated { opacity: 0.2; text-decoration: line-through; }
+        
+        .status-bar { font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        .match-count { color: var(--green); }
+        
+        /* Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; text-align: center; }
+        .modal.active { display: flex; }
+        .modal h1 { font-size: 3rem; color: var(--accent); }
+    </style>
+</head>
+<body>
+
+<div class="panel-left">
+    <div class="story-card">
+        <h2>🕵️ Veri Dedektifi</h2>
+        <p>Antalya Merkez Bankası soyuldu! Güvenlik kameraları ve tanık ifadelerinden elde edilen veriler elimizde.</p>
+        <p>Pandas filtrelerini kullanarak suçsuzları ele ve suçluyu bul.</p>
+    </div>
+    
+    <div class="clue-box">
+        <span>İPUCU 1/3:</span>
+        <p id="clue-text">Güvenlik görevlisi: "Şüpheli kesinlikle Siyah giyiniyordu."</p>
+    </div>
+
+    <div class="options-grid" id="options">
+        </div>
+</div>
+
+<div class="panel-right">
+    <div class="status-bar">
+        <span>Şüpheli Veri Seti (df)</span>
+        <span class="match-count" id="count">10 Kişi</span>
+    </div>
+    <table id="data-table">
+        <thead>
+            <tr><th>ID</th><th>Ad</th><th>Renk</th><th>Boy (cm)</th><th>Araç</th><th>Konum</th></tr>
+        </thead>
+        <tbody>
+            </tbody>
+    </table>
+</div>
+
+<div class="modal" id="win-modal">
+    <div>
+        <h1>SUÇLU YAKALANDI!</h1>
+        <p>Tebrikler Dedektif. Doğru Pandas komutlarıyla sonuca ulaştın.</p>
+        <button onclick="location.reload()" style="margin-top:20px; text-align:center;">Tekrar Oyna</button>
+    </div>
+</div>
+
+<script>
+    // --- OYUN VERİSİ ---
+    const suspects = [
+        { id: 1, name: "Ali", color: "Mavi", height: 175, car: "Sedan", loc: "Lara" },
+        { id: 2, name: "Veli", color: "Siyah", height: 182, car: "SUV", loc: "Konyaaltı" },
+        { id: 3, name: "Ayşe", color: "Kırmızı", height: 165, car: "Hatchback", loc: "Kepez" },
+        { id: 4, name: "Fatma", color: "Siyah", height: 170, car: "Sedan", loc: "Muratpaşa" },
+        { id: 5, name: "Mehmet", color: "Siyah", height: 185, car: "Motor", loc: "Lara" },
+        { id: 6, name: "Can", color: "Beyaz", height: 190, car: "SUV", loc: "Konyaaltı" },
+        { id: 7, name: "Zeynep", color: "Siyah", height: 168, car: "Hatchback", loc: "Lara" },
+        { id: 8, name: "Burak", color: "Yeşil", height: 178, car: "Sedan", loc: "Kepez" },
+        { id: 9, name: "Cem", color: "Siyah", height: 181, car: "Motor", loc: "Konyaaltı" },
+        { id: 10, name: "Elif", color: "Siyah", height: 174, car: "SUV", loc: "Lara" }
+    ];
+
+    let currentStep = 0;
+    let activeFilters = {};
+
+    const scenarios = [
+        {
+            clue: "Tanık: 'Şüphelinin kıyafeti Siyah renkti.'",
+            correct: "df[df['Renk'] == 'Siyah']",
+            key: "color", val: "Siyah",
+            options: ["df[df['Renk'] == 'Siyah']", "df['Renk'] == 'Mavi'", "df.sort_values('Renk')", "df.drop('Siyah')"]
+        },
+        {
+            clue: "Kamera Kaydı: 'Şüpheli 180 cm'den uzundu.'",
+            correct: "df[df['Boy'] > 180]",
+            key: "height", val: 180, type: "gt",
+            options: ["df[df['Boy'] < 180]", "df[df['Boy'] > 180]", "df['Boy'].max()", "df[df['Boy'] == 180]"]
+        },
+        {
+            clue: "Mobese: 'Şüpheli Motor kullanıyordu.'",
+            correct: "df[df['Araç'] == 'Motor']",
+            key: "car", val: "Motor",
+            options: ["df.groupby('Araç')", "df[df['Araç'] != 'Motor']", "df[df['Araç'] == 'Motor']", "df.iloc[0]"]
+        }
+    ];
+
+    function renderTable() {
+        const tbody = document.querySelector('#data-table tbody');
+        tbody.innerHTML = '';
+        let matchCount = 0;
+
+        suspects.forEach(s => {
+            // Filtre kontrolü
+            let isMatch = true;
+            if (activeFilters.color && s.color !== activeFilters.color) isMatch = false;
+            if (activeFilters.height && s.height <= activeFilters.height) isMatch = false;
+            if (activeFilters.car && s.car !== activeFilters.car) isMatch = false;
+
+            const tr = document.createElement('tr');
+            if (!isMatch) tr.classList.add('eliminated');
+            else matchCount++;
+
+            tr.innerHTML = `<td>${s.id}</td><td>${s.name}</td><td>${s.color}</td><td>${s.height}</td><td>${s.car}</td><td>${s.loc}</td>`;
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('count').innerText = matchCount + " Kişi Kaldı";
+        
+        if (currentStep === 3 && matchCount === 1) {
+            setTimeout(() => document.getElementById('win-modal').classList.add('active'), 1000);
+        }
+    }
+
+    function loadStep() {
+        if (currentStep >= scenarios.length) return;
+        
+        const step = scenarios[currentStep];
+        document.getElementById('clue-text').innerText = step.clue;
+        
+        const optionsDiv = document.getElementById('options');
+        optionsDiv.innerHTML = '';
+        
+        // Şıkları karıştır
+        const shuffled = [...step.options].sort(() => Math.random() - 0.5);
+        
+        shuffled.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(opt, step);
+            optionsDiv.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(selected, step) {
+        if (selected === step.correct) {
+            // Filtreyi uygula
+            activeFilters[step.key] = step.val;
+            renderTable();
+            currentStep++;
+            loadStep();
+        } else {
+            alert("Hatalı kod! Bu filtre yanlış kişileri eler.");
+        }
+    }
+
+    renderTable();
+    loadStep();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C++ Templates Testi</title>
+    <style>
+        :root {
+            --primary: #8b5cf6; /* Template konusu için mor tema */
+            --secondary: #475569;
+            --success: #16a34a;
+            --error: #dc2626;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --code-bg: #1e293b;
+            --code-text: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: #1e293b;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary), #6d28d9);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 { margin: 0; font-size: 2rem; }
+        p.subtitle { opacity: 0.9; margin-top: 5px; }
+
+        .question-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s;
+        }
+
+        .question-number {
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 10px;
+            display: block;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        .code-block {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin: 15px 0;
+            border-left: 4px solid var(--primary);
+        }
+
+        .options {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+        }
+
+        .option-item {
+            margin-bottom: 10px;
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+        .option-item:hover {
+            border-color: var(--primary);
+            background-color: #f3e8ff;
+        }
+
+        .option-item input[type="radio"] {
+            margin-right: 15px;
+            transform: scale(1.2);
+            accent-color: var(--primary);
+        }
+
+        /* Sonuç Gösterme Stilleri */
+        .correct-answer {
+            background-color: #dcfce7 !important;
+            border-color: var(--success) !important;
+            color: #14532d;
+        }
+
+        .wrong-answer {
+            background-color: #fee2e2 !important;
+            border-color: var(--error) !important;
+            color: #7f1d1d;
+        }
+
+        .explanation {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f1f5f9;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            border-left: 4px solid var(--secondary);
+        }
+
+        #submit-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-bottom: 50px;
+        }
+
+        #submit-btn:hover {
+            background-color: #5b21b6;
+        }
+
+        #result-area {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            display: none;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            border: 2px solid var(--primary);
+        }
+
+        /* Kod renklendirme */
+        .kw { color: #c678dd; } /* Keyword */
+        .type { color: #e5c07b; } /* Type */
+        .func { color: #61afef; } /* Function */
+        .num { color: #d19a66; } /* Number */
+        .str { color: #98c379; } /* String */
+        .comment { color: #7f848e; font-style: italic; } /* Comment */
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>C++ Templates Sınavı</h1>
+        <p class="subtitle">Toplam 6 Soru | Generic Programming</p>
+    </header>
+
+    <div id="quiz-container">
+        </div>
+
+    <div id="result-area"></div>
+    <button id="submit-btn" onclick="checkAnswers()">Testi Bitir ve Sonuçları Gör</button>
+</div>
+
+<script>
+    const questions = [
+        {
+            id: 1,
+            text: "C++'ta template'lerin temel amacı nedir?",
+            code: null,
+            options: [
+                "a) Programı daha hızlı çalıştırmak",
+                "b) Aynı kodu farklı veri tipleriyle yeniden kullanılabilir hale getirmek",
+                "c) Bellek kullanımını azaltmak",
+                "d) Kodun okunmasını zorlaştırmak"
+            ],
+            correct: 1 // b
+        },
+        {
+            id: 2,
+            text: "Aşağıdaki hangi satır bir fonksiyon template'ini doğru şekilde tanımlar?",
+            code: null,
+            options: [
+                "a) <code>void swap(T a, T b)</code>",
+                "b) <code>template &lt;typename T&gt; void swap(T a, T b)</code>",
+                "c) <code>template T void swap(T a, T b)</code>",
+                "d) <code>typename &lt;T&gt; void swap(T a, T b)</code>"
+            ],
+            correct: 1 // b
+        },
+        {
+            id: 3,
+            text: "Aşağıdaki kod derlenir ve çalışır mı?",
+            code: `<span class="kw">template</span> &lt;<span class="kw">typename</span> <span class="type">T</span>&gt;
+<span class="type">T</span> <span class="func">max</span>(<span class="type">T</span> a, <span class="type">T</span> b) {
+    <span class="kw">return</span> (a > b) ? a : b;
+}
+
+<span class="type">int</span> <span class="func">main</span>() {
+    cout << <span class="func">max</span>(<span class="num">3</span>, <span class="num">7</span>) << endl;
+    cout << <span class="func">max</span>(<span class="num">2.5</span>, <span class="num">1.8</span>) << endl;
+    <span class="kw">return</span> <span class="num">0</span>;
+}`,
+            options: [
+                "a) Hayır, derlenmez çünkü template tanımlaması yanlıştır",
+                "b) Evet, derlenir ve sırayla 7 ile 2.5 yazdırır",
+                "c) Hayır, double için ayrı fonksiyon yazmak gerekir",
+                "d) Evet, ama sadece int için çalışır"
+            ],
+            correct: 1 // b
+        },
+        {
+            id: 4,
+            text: "Bir sınıf template'i nasıl tanımlanır? Aşağıdakilerden hangisi doğrudur?",
+            code: null,
+            options: [
+                "a) <pre><code>template &lt;class T&gt;\nclass Stack { ... };</code></pre>",
+                "b) <pre><code>class &lt;typename T&gt; Stack {\n ... };</code></pre>",
+                "c) <pre><code>template T class Stack {\n ... };</code></pre>",
+                "d) <pre><code>typename T class Stack {\n ... };</code></pre>"
+            ],
+            correct: 0 // a
+        },
+        {
+            id: 5,
+            text: "Aşağıdaki kodda <code>Pair&lt;int, double&gt; p;</code> satırı ne oluşturur?",
+            code: `<span class="kw">template</span> &lt;<span class="kw">typename</span> <span class="type">T1</span>, <span class="kw">typename</span> <span class="type">T2</span>&gt;
+<span class="kw">class</span> <span class="type">Pair</span> {
+<span class="kw">public</span>:
+    <span class="type">T1</span> first;
+    <span class="type">T2</span> second;
+};
+
+<span class="type">int</span> <span class="func">main</span>() {
+    <span class="type">Pair</span>&lt;<span class="type">int</span>, <span class="type">double</span>&gt; p;
+    <span class="kw">return</span> <span class="num">0</span>;
+}`,
+            options: [
+                "a) İlk elemanı int, ikinci elemanı double olan bir Pair nesnesi",
+                "b) İki int elemanı olan bir Pair nesnesi",
+                "c) Hata verir çünkü iki tip belirtilmemiş",
+                "d) Sadece double eleman kabul eder"
+            ],
+            correct: 0 // a
+        },
+        {
+            id: 6,
+            text: "Aşağıdaki kullanımın sonucu ekrana ne yazdırır?",
+            code: `<span class="kw">template</span> &lt;<span class="kw">typename</span> <span class="type">T</span>&gt;
+<span class="type">T</span> <span class="func">topla</span>(<span class="type">T</span> x, <span class="type">T</span> y) {
+    <span class="kw">return</span> x + y;
+}
+
+<span class="type">int</span> <span class="func">main</span>() {
+    cout << <span class="func">topla</span>(<span class="num">5</span>, <span class="num">10</span>) << endl;
+    cout << <span class="func">topla</span>(<span class="num">3.2</span>, <span class="num">4.8</span>) << endl;
+    <span class="comment">// cout << topla(5, 3.2) << endl; // yorum satırı</span>
+    <span class="kw">return</span> <span class="num">0</span>;
+}`,
+            options: [
+                "a) 15 ve 8 yazdırır",
+                "b) 15 ve 8 yazdırır ama üçüncü satır derleme hatası verir (yorum dışı bırakıldığı için sorun yok)",
+                "c) Sadece 15 yazdırır",
+                "d) Derleme hatası verir çünkü iki farklı tip karıştırılamaz"
+            ],
+            correct: 0 // a
+        }
+    ];
+
+    function renderQuiz() {
+        const container = document.getElementById('quiz-container');
+        questions.forEach((q, index) => {
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.innerHTML = `
+                <span class="question-number">Soru ${index + 1}</span>
+                <div class="question-text">${q.text}</div>
+                ${q.code ? `<div class="code-block">${q.code}</div>` : ''}
+                <ul class="options">
+                    ${q.options.map((opt, i) => `
+                        <li>
+                            <label class="option-item" id="q${index}-opt${i}">
+                                <input type="radio" name="q${index}" value="${i}">
+                                ${opt}
+                            </label>
+                        </li>
+                    `).join('')}
+                </ul>
+                <div class="explanation" id="expl-${index}"></div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function checkAnswers() {
+        let score = 0;
+        let answered = 0;
+
+        questions.forEach((q, index) => {
+            const selected = document.querySelector(`input[name="q${index}"]:checked`);
+            const explDiv = document.getElementById(`expl-${index}`);
+            
+            // Stilleri sıfırla
+            for(let i=0; i<4; i++) {
+                const optElement = document.getElementById(`q${index}-opt${i}`);
+                if(optElement) optElement.classList.remove('correct-answer', 'wrong-answer');
+            }
+
+            if (selected) {
+                const val = parseInt(selected.value);
+                answered++;
+                
+                if (val === q.correct) {
+                    score++;
+                    document.getElementById(`q${index}-opt${val}`).classList.add('correct-answer');
+                    explDiv.style.display = 'block';
+                    explDiv.innerHTML = "✅ <strong>Doğru!</strong>";
+                    explDiv.style.color = "#14532d";
+                } else {
+                    document.getElementById(`q${index}-opt${val}`).classList.add('wrong-answer');
+                    document.getElementById(`q${index}-opt${q.correct}`).classList.add('correct-answer');
+                    explDiv.style.display = 'block';
+                    explDiv.innerHTML = "❌ <strong>Yanlış.</strong> Doğru cevap işaretlendi.";
+                    explDiv.style.color = "#7f1d1d";
+                }
+            } else {
+                // Boş bırakılan
+                document.getElementById(`q${index}-opt${q.correct}`).classList.add('correct-answer');
+                explDiv.style.display = 'block';
+                explDiv.innerHTML = "⚠️ <strong>Boş Bırakıldı.</strong>";
+            }
+        });
+
+        const resultArea = document.getElementById('result-area');
+        resultArea.style.display = 'block';
+        resultArea.innerHTML = `Sonuç: ${questions.length} sorudan ${score} doğru yaptınız.<br>Başarı Oranı: %${Math.round((score/questions.length)*100)}`;
+        
+        resultArea.scrollIntoView({behavior: 'smooth'});
+        
+        document.getElementById('submit-btn').disabled = true;
+        document.getElementById('submit-btn').innerText = "Test Tamamlandı";
+    }
+
+    renderQuiz();
+</script>
+
+</body>
+</html>
